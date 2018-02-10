@@ -52,11 +52,15 @@ class OffsetNet(nn.Module):
     def __init__(self, inchannel):
         super(OffsetNet, self).__init__()
 
-        self.conv11 = nn.Conv2d(inchannel, inchannel // 2, 3, padding=1)
-        self.bn11 = nn.BatchNorm2d(inchannel // 2)
+        # self.conv11 = nn.Conv2d(inchannel, inchannel // 2, 3, padding=1)
+        self.conv11 = nn.Conv2d(inchannel, 512, 3, padding=1)
+        # self.bn11 = nn.BatchNorm2d(inchannel // 2)
+        self.bn11 = nn.BatchNorm2d(512)
 
-        self.offset12 = ConvOffset2D(inchannel // 2)
-        self.conv12 = nn.Conv2d(inchannel // 2, inchannel // 2, 3, padding=1)
+        # self.offset12 = ConvOffset2D(inchannel // 2)
+        self.offset12 = ConvOffset2D(512)
+        # self.conv12 = nn.Conv2d(inchannel // 2, inchannel // 2, 3, padding=1)
+        self.conv12 = nn.Conv2d(512, inchannel // 2, 3, padding=1)
         self.bn12 = nn.BatchNorm2d(inchannel // 2)
 
         self.conv21 = nn.Conv2d(inchannel // 2, 2, 3, padding=1)
