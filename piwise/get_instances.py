@@ -69,14 +69,14 @@ class Instance(Dataset):
         #    print('image:', type(image))
         # image.cuda()
         # print('image: ', image.size())
-        annotation = torch.Tensor(annotation).unsqueeze(0)
-        offset = torch.Tensor(offset) #.transpose(0, 2).transpose(1, 2)[:, :256, :256]
+        annotation = torch.Tensor(annotation)
+        offset = torch.Tensor(offset).transpose(0, 2).transpose(1, 2)#[:, :256, :256]
         #print('Image:', image.size())
         #print('anno:', annotation.size())
         #print('offset:', offset.size())
         # a, b, c = image.size()
         # v = image[:, :min(b,300), :min(c, 100)]
-        return image, annotation, offset #np.random.randn(3, 45, 70)#offset #image #, #annotation, offset # segmentation
+        return image, offset, annotation #np.random.randn(3, 45, 70)#offset #image #, #annotation, offset # segmentation
 
     def __len__(self):
         return len(self.imglist)

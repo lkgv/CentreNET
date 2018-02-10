@@ -88,6 +88,7 @@ class ClassNet(nn.Module):
         self.bn21 = nn.BatchNorm2d(512)
 
         self.conv22 = nn.Conv2d(512, nclass, 2, padding=0)
+        self.avg2 = nn.AdaptiveAvgPool2d(2)
 
     def forward(self, x):
         x = F.relu(self.conv11(x))
@@ -98,7 +99,7 @@ class ClassNet(nn.Module):
         x = F.relu(self.conv21(x))
         x = self.bn21(x)
 
-        x = F.softmax(self.conv22(x))
+        x = F.softmax(self.avg2(self.conv22(x)))
 
         x = x.squeeze(3)
         x = x.squeeze(3)
