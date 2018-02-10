@@ -164,6 +164,9 @@ def th_batch_map_offsets(input, offsets, grid=None, order=1):
     batch_size = input.size(0)
     input_size = input.size(1)
 
+    print('offsets:', offsets.size())
+    print('grid:', grid.size())
+
     offsets = offsets.view(batch_size, -1, 2)
     if grid is None:
         grid = th_generate_grid(batch_size, input_size, offsets.data.type(), offsets.data.is_cuda)
