@@ -82,12 +82,12 @@ class ClassNet(nn.Module):
         self.conv11 = nn.Conv2d(inchannel, 512, 3, padding=1)
         self.bn11 = nn.BatchNorm2d(512)
 
-        self.avgpool = nn.AdaptiveAvgPool2d(1)
+        self.avgpool = nn.AdaptiveAvgPool2d(2)
 
-        self.conv21 = nn.Conv2d(512, 512, 1, padding=0)
+        self.conv21 = nn.Conv2d(512, 512, 2, padding=1)
         self.bn21 = nn.BatchNorm2d(512)
 
-        self.conv22 = nn.Conv2d(512, nclass, 1, padding=0)
+        self.conv22 = nn.Conv2d(512, nclass, 2, padding=0)
 
     def forward(self, x):
         x = F.relu(self.conv11(x))
