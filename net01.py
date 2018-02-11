@@ -71,8 +71,7 @@ class OffsetNet(nn.Module):
         x = self.bn12(x)
 
         x = F.relu(self.conv21(x))
-        x = self.bn21(x)
-
+        print('X size',x.size())
         return x
 
 class ClassNet(nn.Module):
@@ -88,7 +87,7 @@ class ClassNet(nn.Module):
         self.bn21 = nn.BatchNorm2d(512)
 
         self.conv22 = nn.Conv2d(512, nclass, 2, padding=0)
-        self.avg2 = nn.AdaptiveAvgPool2d(2)
+        self.avg2 = nn.AdaptiveAvgPool2d(1)
 
     def forward(self, x):
         x = F.relu(self.conv11(x))
@@ -102,7 +101,7 @@ class ClassNet(nn.Module):
         x = F.softmax(self.avg2(self.conv22(x)))
 
         x = x.squeeze(3)
-        x = x.squeeze(3)
+        x = x.squeeze(2)
 
         return x
 
@@ -125,6 +124,7 @@ class ConvNet(nn.Module):
     def forward(self, x):
         featuremap = self.features(x)
         offsetmap = self.offset(featuremap)
+        print('offset: ', offsetmap.size())
         classes = self.classifier(featuremap)
 
         return offsetmap, classes

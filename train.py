@@ -98,6 +98,8 @@ def train():
 
             y = y.squeeze(1)
 
+            print('out:', type(out.data))
+            print('y:', type(y.data))
             seg_loss = seg_criterion(out, y)
 
             cls_loss = cls_criterion(out_cls, y_cls)
