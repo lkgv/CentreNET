@@ -54,7 +54,7 @@ class Vgg16FeatureNet(nn.Module):
         basenet = models.vgg16(pretrained=False).features
 
         for name, layer in basenet.named_children():
-            if name not in ('23', '30'):
+            if name not in ('16', '23', '30'):
                 self.add_module(name, layer)
 
     def forward(self, x):
@@ -128,9 +128,9 @@ class ConvNet(nn.Module):
 
         self.features = Vgg16FeatureNet() # Dense121FeatureNet()
 
-        inchannel = 1024
-        self.classifier = ClassNet(1024, 21)
-        self.offset = OffsetNet(1024)
+        inchannel = 512
+        self.classifier = ClassNet(inchannel, 21)
+        self.offset = OffsetNet(inchannel)
         # self.classifier = ClassNet(inchannel, nclass)
         # self.offset = OffsetNet(inchannel)
 
