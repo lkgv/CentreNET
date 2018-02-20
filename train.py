@@ -100,7 +100,7 @@ def train():
 
             print('out:', type(out.data))
             print('y:', type(y.data))
-            seg_loss = seg_criterion(out, y)
+            seg_loss = seg_criterion(y, out)
 
             cls_loss = cls_criterion(out_cls, y_cls)
             loss = seg_loss + alpha * cls_loss
