@@ -29,10 +29,10 @@ class NoShrunkenTransition(nn.Module):
             x = layer(x)
         return x
 
-class FeatureNet(nn.Module):
+class Dense121FeatureNet(nn.Module):
     def __init__(self):
-        super(FeatureNet, self).__init__()
-        basenet = models.densenet121(pretrained = False).features
+        super(Dense121FeatureNet, self).__init__()
+        basenet = models.densenet121(pretrained=False).features
 
         for name, layer in basenet.named_children():
             if 'transition' in name:
@@ -41,6 +41,20 @@ class FeatureNet(nn.Module):
                 new_transition = NoShrunkenTransition(layer)
                 self.add_module(name, new_transition)
             else:
+                self.add_module(name, layer)
+
+    def forward(self, x):
+        for layer in self.children():
+            x = layer(x)
+        return x
+
+class Vgg16FeatureNet(nn.Module):
+    def __init__(self):
+        super(Vgg16FeatureNet, self).__init__()
+        basenet = models.vgg16(pretrained=False).features
+
+        for name, layer in basenet.named_children():
+            if name not in ('23', '30'):
                 self.add_module(name, layer)
 
     def forward(self, x):
@@ -112,7 +126,7 @@ class ConvNet(nn.Module):
         super(ConvNet, self).__init__()
         nclass = int(config('data', 'NUM_CLASSES'))
 
-        self.features = FeatureNet()
+        self.features = Vgg16FeatureNet() # Dense121FeatureNet()
 
         inchannel = 1024
         self.classifier = ClassNet(1024, 21)
@@ -123,6 +137,7 @@ class ConvNet(nn.Module):
 
     def forward(self, x):
         featuremap = self.features(x)
+        print('feature: ', featuremap.size())
         offsetmap = self.offset(featuremap)
         print('offset: ', offsetmap.size())
         classes = self.classifier(featuremap)
