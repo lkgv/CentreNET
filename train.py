@@ -98,10 +98,10 @@ def train():
 
             y = y.squeeze(1)
 
-            print('out:', type(out.data))
-            print('y:', type(y.data))
+            print('out:', out.shape)
+            print('y:', y.shape)
 
-            seg_loss = seg_criterion(out, y) #.squeeze(0)) #torch.cuda.LongTensor(out), 
+            seg_loss = seg_criterion(out, y.squeeze(0)) #torch.cuda.LongTensor(out), 
                                      #torch.cuda.LongTensor(y))
 
             cls_loss = cls_criterion(out_cls, y_cls)
