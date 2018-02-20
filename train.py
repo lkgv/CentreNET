@@ -87,7 +87,7 @@ def train():
         for x, y, y_cls in train_iterator:
             steps += batch_size
             optimizer.zero_grad()
-            x, y, y_cls = Variable(x).cuda(), Variable(y).cuda(), Variable(y_cls).cuda()
+            x, y, y_cls = Variable(x).cuda(), Variable(y.type(torch.LongTensor)).cuda(), Variable(y_cls).cuda()
             out, out_cls = net(x)
 
             print('x:', x.size())
@@ -100,7 +100,8 @@ def train():
 
             print('out:', type(out.data))
             print('y:', type(y.data))
-            seg_loss = seg_criterion(out, y)
+            seg_loss = seg_criterion(out, y.squeeze(0)) #torch.cuda.LongTensor(out), 
+                                     #torch.cuda.LongTensor(y))
 
             cls_loss = cls_criterion(out_cls, y_cls)
             loss = seg_loss + alpha * cls_loss
