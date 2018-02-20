@@ -107,8 +107,9 @@ def train():
             seg_loss = seg_criterion(out, y) #torch.cuda.LongTensor(out), 
                                      #torch.cuda.LongTensor(y))
 
-            cls_loss = cls_criterion(out_cls, y_cls)
-            loss = seg_loss + alpha * cls_loss
+            # cls_loss = cls_criterion(out_cls, y_cls)
+
+            loss = seg_loss # + alpha * cls_loss
             epoch_losses.append(loss.data[0])
 
             status = '[{0}] loss = {1:0.5f} avg = {2:0.5f}, LR = {3:0.7f}'.format(
