@@ -131,6 +131,9 @@ class ConvNet(nn.Module):
         inchannel = 512
         self.classifier = ClassNet(inchannel, 21)
         self.offset = OffsetNet(inchannel)
+
+        self.upspl_1 = nn.UpsamplingBilinear2d(scale_factor=2)
+        self.upspl_2 = nn.UpsamplingBilinear2d(scale_factor=2)
         # self.classifier = ClassNet(inchannel, nclass)
         # self.offset = OffsetNet(inchannel)
 
@@ -138,8 +141,12 @@ class ConvNet(nn.Module):
     def forward(self, x):
         featuremap = self.features(x)
         print('feature: ', featuremap.size())
+
         offsetmap = self.offset(featuremap)
+        offsetmap = self.upspl_1(offsetmap)
+        offsetmap = self.upspl_2(offsetmap)
         print('offset: ', offsetmap.size())
+
         classes = self.classifier(featuremap)
 
         return offsetmap, classes
