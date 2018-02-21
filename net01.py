@@ -5,6 +5,8 @@ from torchvision import models
 from torch.autograd import variable
 from torch_deform_conv.layers import ConvOffset2D
 
+DEBUG = False
+
 class NoShrunkenTransition(nn.Module):
     """ NoShrunkenTransition
     is the new transistion module for densenet,
@@ -85,7 +87,8 @@ class OffsetNet(nn.Module):
         x = self.bn12(x)
 
         x = F.relu(self.conv21(x))
-        print('X size',x.size())
+        if DEBUG:
+            print('X size',x.size())
         return x
 
 class ClassNet(nn.Module):
@@ -140,12 +143,14 @@ class ConvNet(nn.Module):
 
     def forward(self, x):
         featuremap = self.features(x)
-        # print('feature: ', featuremap.size())
+        if DEBUG:
+            print('feature: ', featuremap.size())
 
         offsetmap = self.offset(featuremap)
         offsetmap = self.upspl_1(offsetmap)
         offsetmap = self.upspl_2(offsetmap)
-        # print('offset: ', offsetmap.size())
+        if DEBUG:
+            print('offset: ', offsetmap.size())
 
         classes = self.classifier(featuremap)
 

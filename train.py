@@ -15,6 +15,10 @@ import VOC2012
 from net01 import ConvNet
 from utils import Configures
 
+
+DEBUG = False
+
+
 def build_network(snapshot, backend):
     epoch = 0
     backend = backend.lower()
@@ -68,7 +72,7 @@ def train():
 
     scheduler = MultiStepLR(optimizer, milestones=[x for x in [10, 20, 30]])
 
-    max_steps = 2915
+    max_steps = 5428
 
     alpha = float(config('train', 'ALPHA'))
 
@@ -92,16 +96,18 @@ def train():
             x, y, y_cls = Variable(x).cuda(), Variable(y.type(torch.LongTensor)).cuda(), Variable(y_cls).cuda()
             out, out_cls = net(x)
 
-            # print('x:', x.size())
-            # print('y:', y.size())
-            # print('y_cls:', y_cls.size())
-            # print('out:', out.size())
-            # print('out_cls:', out_cls.size())
+            if DEBUG:
+                print('x:', x.size())
+                print('y:', y.size())
+                print('y_cls:', y_cls.size())
+                print('out:', out.size())
+                print('out_cls:', out_cls.size())
 
             y = y.squeeze(1)
 
-            # print('out:', out.shape)
-            # print('y:', y.shape)
+            if DEBUG:
+                print('out:', out.shape)
+                print('y:', y.shape)
 
             out = out.view(batch_size, 1, -1, 256) / 512.0
             y = y.view(batch_size, -1, 256) / 512.0
