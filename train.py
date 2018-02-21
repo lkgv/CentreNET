@@ -119,6 +119,7 @@ def train():
 
             loss = seg_loss + alpha * cls_loss
             epoch_losses.append(loss.data[0])
+            print(loss.data)
 
             status = '[{0}] loss = {1:0.5f} avg = {2:0.5f}, LR = {3:0.7f}'.format(
                 epoch + 1,
