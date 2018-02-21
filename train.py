@@ -70,7 +70,7 @@ def train():
 
     optimizer = optim.Adam(net.parameters(), lr=float(config('train', 'LR')))
 
-    scheduler = MultiStepLR(optimizer, milestones=[x for x in [10, 20, 30]])
+    scheduler = MultiStepLR(optimizer, milestones=[x * 5 for x in range(1, 10)], gamma=0.3)
 
     max_steps = 5428
 
@@ -110,8 +110,8 @@ def train():
                 print('out:', out.shape)
                 print('y:', y.shape)
 
-            out = out.view(batch_size, 1, -1, 256) / 512.0
-            y = y.view(batch_size, -1, 256) / 512.0
+            # out = out.view(batch_size, 1, -1, 256) / 512.0
+            # y = y.view(batch_size, -1, 256) / 512.0
 
             # seg_loss = seg_criterion(out, y) #torch.cuda.LongTensor(out), 
                                      # torch.cuda.LongTensor(y))
