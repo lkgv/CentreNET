@@ -34,7 +34,7 @@ class NoShrunkenTransition(nn.Module):
 class Dense121FeatureNet(nn.Module):
     def __init__(self):
         super(Dense121FeatureNet, self).__init__()
-        basenet = models.densenet121(pretrained=False).features
+        basenet = models.densenet121(pretrained=True).features
 
         for name, layer in basenet.named_children():
             if 'transition' in name:

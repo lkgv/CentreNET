@@ -80,6 +80,7 @@ def train():
         class_weights.cuda()
         seg_criterion = nn.NLLLoss2d()
         cls_criterion = nn.BCEWithLogitsLoss()
+        mse_loss = nn.MSELoss()
         # seg_criterion = nn.NLLLoss2d()
         # cls_criterion = nn.BCEWithLogitsLoss()
 
@@ -93,7 +94,7 @@ def train():
         for x, y, y_cls in train_iterator:
             steps += batch_size
             optimizer.zero_grad()
-            x, y, y_cls = Variable(x).cuda(), Variable(y.type(torch.LongTensor)).cuda(), Variable(y_cls).cuda()
+            x, y, y_cls = Variable(x).cuda(), Variable(y).cuda(), Variable(y_cls).cuda()
             out, out_cls = net(x)
 
             if DEBUG:
@@ -112,14 +113,19 @@ def train():
             out = out.view(batch_size, 1, -1, 256) / 512.0
             y = y.view(batch_size, -1, 256) / 512.0
 
-            seg_loss = seg_criterion(out, y) #torch.cuda.LongTensor(out), 
+            # seg_loss = seg_criterion(out, y) #torch.cuda.LongTensor(out), 
                                      # torch.cuda.LongTensor(y))
+            seg_loss = mse_loss(out.view(batch_size, -1) / 512.0, y.view(batch_size, -1) / 512.0)
 
             cls_loss = cls_criterion(out_cls, y_cls)
 
             loss = seg_loss + alpha * cls_loss
             epoch_losses.append(loss.data[0])
-            print(loss.data)
+
+            # print('loss: ', loss.data)
+            # print('segloss: ', seg_loss.data)
+            # print('clsloss: ', alpha * cls_loss.data)
+
 
             status = '[{0}] loss = {1:0.5f} avg = {2:0.5f}, LR = {3:0.7f}'.format(
                 epoch + 1,
