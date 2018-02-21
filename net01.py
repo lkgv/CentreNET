@@ -140,12 +140,12 @@ class ConvNet(nn.Module):
 
     def forward(self, x):
         featuremap = self.features(x)
-        print('feature: ', featuremap.size())
+        # print('feature: ', featuremap.size())
 
         offsetmap = self.offset(featuremap)
         offsetmap = self.upspl_1(offsetmap)
         offsetmap = self.upspl_2(offsetmap)
-        print('offset: ', offsetmap.size())
+        # print('offset: ', offsetmap.size())
 
         classes = self.classifier(featuremap)
 
