@@ -70,6 +70,8 @@ def train():
 
     max_steps = 2915
 
+    alpha = float(config('train', 'ALPHA'))
+
     for epoch in range(starting_epoch, starting_epoch + int(config('train', 'NUM_EPOCH'))):
         class_weights.cuda()
         seg_criterion = nn.NLLLoss2d()
