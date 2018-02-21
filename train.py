@@ -115,7 +115,7 @@ def train():
 
             # seg_loss = seg_criterion(out, y) #torch.cuda.LongTensor(out), 
                                      # torch.cuda.LongTensor(y))
-            seg_loss = mse_loss(out.view(batch_size, -1) / 512.0, y.view(batch_size, -1) / 512.0)
+            seg_loss = mse_loss(out.view(batch_size, -1), y.view(batch_size, -1))
 
             cls_loss = cls_criterion(out_cls, y_cls)
 
