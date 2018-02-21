@@ -101,11 +101,11 @@ def train():
             print('out:', out.shape)
             print('y:', y.shape)
 
-            out = out.view(batch_size, 1, -1, 256)
-            y = y.view(batch_size, -1, 256)
+            out = out.view(batch_size, 1, -1, 256) / 512.0
+            y = y.view(batch_size, -1, 256) / 512.0
 
             seg_loss = seg_criterion(out, y) #torch.cuda.LongTensor(out), 
-                                     #torch.cuda.LongTensor(y))
+                                     # torch.cuda.LongTensor(y))
 
             # cls_loss = cls_criterion(out_cls, y_cls)
 
