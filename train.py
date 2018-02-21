@@ -90,16 +90,16 @@ def train():
             x, y, y_cls = Variable(x).cuda(), Variable(y.type(torch.LongTensor)).cuda(), Variable(y_cls).cuda()
             out, out_cls = net(x)
 
-            print('x:', x.size())
-            print('y:', y.size())
-            print('y_cls:', y_cls.size())
-            print('out:', out.size())
-            print('out_cls:', out_cls.size())
+            # print('x:', x.size())
+            # print('y:', y.size())
+            # print('y_cls:', y_cls.size())
+            # print('out:', out.size())
+            # print('out_cls:', out_cls.size())
 
             y = y.squeeze(1)
 
-            print('out:', out.shape)
-            print('y:', y.shape)
+            # print('out:', out.shape)
+            # print('y:', y.shape)
 
             out = out.view(batch_size, 1, -1, 256) / 512.0
             y = y.view(batch_size, -1, 256) / 512.0
