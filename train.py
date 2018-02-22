@@ -58,6 +58,10 @@ def train():
     os.environ["CUDA_VISIBLE_DEVICES"] = config('train', 'WORKERS')
     # net, starting_epoch = build_network(snapshot, backend)
     # data_path = os.path.abspath(os.path.expanduser(data_path))
+    seed = int(config('train', 'RANDOM_SEED'))
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+
     models_path = os.path.abspath(os.path.expanduser('models'))
     os.makedirs(models_path, exist_ok=True)
 
