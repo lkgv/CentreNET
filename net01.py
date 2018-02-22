@@ -113,7 +113,7 @@ class ClassNet(nn.Module):
         self.avgpool = nn.AdaptiveAvgPool2d(1)
 
         self.lin1 = nn.Linear(2048, 2048)
-        self.droup1 = nn.Droupout(0.5)
+        self.drop1 = nn.Dropout(0.5)
 
         self.lin2 = nn.Linear(2048, nclass)
 
@@ -125,7 +125,7 @@ class ClassNet(nn.Module):
         x = x.squeeze(3).squeeze(2)
 
         x = F.relu(self.lin1(x))
-        x = self.droup1(x)
+        x = self.drop1(x)
 
         x = self.lin2(x)
 
