@@ -80,10 +80,6 @@ def train():
 
     for epoch in range(starting_epoch, starting_epoch + int(config('train', 'NUM_EPOCH'))):
 
-        if curepoch < 5:
-            alpha = 1000
-        else:
-            alpha = 0.5
         curepoch += 1
 
         class_weights.cuda()
@@ -128,7 +124,10 @@ def train():
 
             cls_loss = cls_criterion(out_cls, y_cls)
 
-            loss = seg_loss + alpha * cls_loss
+            if curepoch < 3:
+                loss = cls_loss
+            else:
+                loss = seg_loss + alpha * cls_loss
             epoch_losses.append(loss.data[0])
 
             # print('loss: ', loss.data)
