@@ -76,7 +76,14 @@ def train():
 
     alpha = float(config('train', 'ALPHA'))
 
+    curepoch = 0
+
     for epoch in range(starting_epoch, starting_epoch + int(config('train', 'NUM_EPOCH'))):
+
+        if curepoch < 5:
+            alpha = 100
+        else:
+            alpha = 0.5
         class_weights.cuda()
         seg_criterion = nn.NLLLoss2d()
         cls_criterion = nn.BCEWithLogitsLoss()

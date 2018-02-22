@@ -68,15 +68,20 @@ class OffsetNet(nn.Module):
     def __init__(self, inchannel):
         super(OffsetNet, self).__init__()
 
-        self.conv11 = nn.Conv2d(inchannel, inchannel, 3, padding=1)
+        self.conv11 = nn.Conv2d(inchannel, inchannel, 3, padding=2, dilation=2)
         self.bn11 = nn.BatchNorm2d(inchannel)
 
         # self.offset12 = ConvOffset2D(inchannel // 2)
-        self.conv12 = nn.Conv2d(inchannel, inchannel, 3, padding=1)
+        self.conv12 = nn.Conv2d(inchannel, inchannel, 3, padding=2, dilation=2)
         self.bn12 = nn.BatchNorm2d(inchannel)
 
-        self.conv21 = nn.Conv2d(inchannel, 2, 3, padding=1)
-        # self.bn21 = nn.BatchNorm2d(2)
+        self.conv21 = nn.Conv2d(inchannel, 256, 3, padding=1)
+        self.bn21 = nn.BatchNorm2d(256)
+
+        self.conv22 = nn.Conv2d(256, 256, 3, padding=1)
+        self.bn22 = nn.BatchNorm2d(256)
+
+        self.conv23 = nn.Conv2d(256, 2, 1, padding=0)
 
     def forward(self, x):
         x = F.relu(self.conv11(x))
@@ -87,6 +92,13 @@ class OffsetNet(nn.Module):
         x = self.bn12(x)
 
         x = F.relu(self.conv21(x))
+        x = self.bn21(x)
+
+        x = F.relu(self.conv22(x))
+        x = self.bn22(x)
+
+        x = F.relu(self.conv23(x))
+
         if DEBUG:
             print('X size',x.size())
         return x
