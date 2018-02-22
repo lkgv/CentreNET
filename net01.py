@@ -75,10 +75,10 @@ class OffsetNet(nn.Module):
         self.conv12 = nn.Conv2d(inchannel, inchannel, 3, padding=2, dilation=2)
         self.bn12 = nn.BatchNorm2d(inchannel)
 
-        self.conv21 = nn.Conv2d(inchannel, 256, 3, padding=1)
-        self.bn21 = nn.BatchNorm2d(256)
+        self.conv21 = nn.Conv2d(inchannel, inchannel, 3, padding=2, dilation=2)
+        self.bn21 = nn.BatchNorm2d(inchannel)
 
-        self.conv22 = nn.Conv2d(256, 256, 3, padding=1)
+        self.conv22 = nn.Conv2d(inchannel, 256, 3, padding=1)
         self.bn22 = nn.BatchNorm2d(256)
 
         self.conv23 = nn.Conv2d(256, 2, 1, padding=0)
@@ -97,7 +97,7 @@ class OffsetNet(nn.Module):
         x = F.relu(self.conv22(x))
         x = self.bn22(x)
 
-        x = F.relu(self.conv23(x))
+        x = self.conv23(x)
 
         if DEBUG:
             print('X size',x.size())
@@ -107,29 +107,27 @@ class ClassNet(nn.Module):
     def __init__(self, inchannel, nclass):
         super(ClassNet, self).__init__()
 
-        self.conv11 = nn.Conv2d(inchannel, 512, 7, padding=6, dilation=2)
-        self.bn11 = nn.BatchNorm2d(512)
+        self.conv11 = nn.Conv2d(inchannel, 2048, 7, padding=6, dilation=2)
+        self.bn11 = nn.BatchNorm2d(2048)
 
         self.avgpool = nn.AdaptiveAvgPool2d(1)
 
-        self.conv21 = nn.Conv2d(512, 512, 1, padding=0)
-        self.bn21 = nn.BatchNorm2d(512)
+        self.lin1 = nn.Linear(2048, 2048)
+        self.droup1 = nn.Droupout(0.5)
 
-        self.conv22 = nn.Conv2d(512, nclass, 1, padding=0)
+        self.lin2 = nn.Linear(2048, nclass)
 
     def forward(self, x):
         x = F.relu(self.conv11(x))
         x = self.bn11(x)
 
         x = self.avgpool(x)
+        x = x.squeeze(3).squeeze(2)
 
-        x = F.relu(self.conv21(x))
-        x = self.bn21(x)
+        x = F.relu(self.lin1(x))
+        x = self.droup1(x)
 
-        x = F.softmax(self.conv22(x))
-
-        x = x.squeeze(3)
-        x = x.squeeze(2)
+        x = self.lin2(x)
 
         return x
 
