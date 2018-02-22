@@ -107,16 +107,15 @@ class ClassNet(nn.Module):
     def __init__(self, inchannel, nclass):
         super(ClassNet, self).__init__()
 
-        self.conv11 = nn.Conv2d(inchannel, 512, 3, padding=1)
+        self.conv11 = nn.Conv2d(inchannel, 512, 7, padding=6, dilation=2)
         self.bn11 = nn.BatchNorm2d(512)
 
-        self.avgpool = nn.AdaptiveAvgPool2d(2)
+        self.avgpool = nn.AdaptiveAvgPool2d(1)
 
-        self.conv21 = nn.Conv2d(512, 512, 2, padding=1)
+        self.conv21 = nn.Conv2d(512, 512, 1, padding=0)
         self.bn21 = nn.BatchNorm2d(512)
 
-        self.conv22 = nn.Conv2d(512, nclass, 2, padding=0)
-        self.avg2 = nn.AdaptiveAvgPool2d(1)
+        self.conv22 = nn.Conv2d(512, nclass, 1, padding=0)
 
     def forward(self, x):
         x = F.relu(self.conv11(x))
@@ -127,14 +126,12 @@ class ClassNet(nn.Module):
         x = F.relu(self.conv21(x))
         x = self.bn21(x)
 
-        x = F.softmax(self.avg2(self.conv22(x)))
+        x = F.softmax(self.conv22(x))
 
         x = x.squeeze(3)
         x = x.squeeze(2)
 
         return x
-
-
 
 class ConvNet(nn.Module):
     def __init__(self, config):
