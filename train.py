@@ -79,7 +79,6 @@ def train():
     curepoch = 0
 
     for epoch in range(starting_epoch, starting_epoch + int(config('train', 'NUM_EPOCH'))):
-
         curepoch += 1
         
         class_weights.cuda()
@@ -100,7 +99,17 @@ def train():
             steps += batch_size
             optimizer.zero_grad()
             x, y, y_cls = Variable(x).cuda(), Variable(y).cuda(), Variable(y_cls).cuda()
-            out, out_cls = net(x)
+            y = y.squeeze(1)
+
+            out, out_cls = None, None
+            if curepoch < 2:
+                out_cls = net(x, func='cls')
+                loss = cls_criterion(out_cls, y_cls)
+            else:
+                out = net(x, func='offset')
+                loss = mse_loss(out.view(batch_size, -1), y.view(batch_size, -1))
+
+            epoch_losses.append(loss.data[0])
 
             if DEBUG:
                 print('x:', x.size())
@@ -108,32 +117,8 @@ def train():
                 print('y_cls:', y_cls.size())
                 print('out:', out.size())
                 print('out_cls:', out_cls.size())
-
-            y = y.squeeze(1)
-
-            if DEBUG:
                 print('out:', out.shape)
                 print('y:', y.shape)
-
-            # out = out.view(batch_size, 1, -1, 256) / 512.0
-            # y = y.view(batch_size, -1, 256) / 512.0
-
-            # seg_loss = seg_criterion(out, y) #torch.cuda.LongTensor(out), 
-                                     # torch.cuda.LongTensor(y))
-            seg_loss = mse_loss(out.view(batch_size, -1), y.view(batch_size, -1))
-
-            cls_loss = cls_criterion(out_cls, y_cls)
-
-            if curepoch < 3:
-                loss = cls_loss
-            else:
-                loss = seg_loss + alpha * cls_loss
-            epoch_losses.append(loss.data[0])
-
-            # print('loss: ', loss.data)
-            # print('segloss: ', seg_loss.data)
-            # print('clsloss: ', alpha * cls_loss.data)
-
 
             status = '[{0}] loss = {1:0.5f} avg = {2:0.5f}, LR = {3:0.7f}'.format(
                 epoch + 1,
