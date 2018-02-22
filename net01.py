@@ -53,10 +53,10 @@ class Dense121FeatureNet(nn.Module):
 class Vgg16FeatureNet(nn.Module):
     def __init__(self):
         super(Vgg16FeatureNet, self).__init__()
-        basenet = models.vgg16(pretrained=False).features
+        basenet = models.vgg16_bn(pretrained=True).features
 
         for name, layer in basenet.named_children():
-            if name not in ('16', '23', '30'):
+            if name not in ('23', '33', '43'):
                 self.add_module(name, layer)
 
     def forward(self, x):
@@ -68,15 +68,15 @@ class OffsetNet(nn.Module):
     def __init__(self, inchannel):
         super(OffsetNet, self).__init__()
 
-        self.conv11 = nn.Conv2d(inchannel, inchannel // 2, 3, padding=1)
-        self.bn11 = nn.BatchNorm2d(inchannel // 2)
+        self.conv11 = nn.Conv2d(inchannel, inchannel, 3, padding=1)
+        self.bn11 = nn.BatchNorm2d(inchannel)
 
         # self.offset12 = ConvOffset2D(inchannel // 2)
-        self.conv12 = nn.Conv2d(inchannel // 2, inchannel // 2, 3, padding=1)
-        self.bn12 = nn.BatchNorm2d(inchannel // 2)
+        self.conv12 = nn.Conv2d(inchannel, inchannel, 3, padding=1)
+        self.bn12 = nn.BatchNorm2d(inchannel)
 
-        self.conv21 = nn.Conv2d(inchannel // 2, 2, 3, padding=1)
-        self.bn21 = nn.BatchNorm2d(2)
+        self.conv21 = nn.Conv2d(inchannel, 2, 3, padding=1)
+        # self.bn21 = nn.BatchNorm2d(2)
 
     def forward(self, x):
         x = F.relu(self.conv11(x))
