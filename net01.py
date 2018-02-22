@@ -69,7 +69,7 @@ class OffsetNet(nn.Module):
         super(OffsetNet, self).__init__()
 
         self.conv11 = nn.Conv2d(inchannel, inchannel * 2, 3, padding=2, dilation=2)
-        self.bn11 = nn.BatchNorm2d(inchannel)
+        self.bn11 = nn.BatchNorm2d(inchannel * 2)
 
         # self.offset12 = ConvOffset2D(inchannel // 2)
         self.conv12 = nn.Conv2d(inchannel * 2, inchannel * 2, 3, padding=2, dilation=2)
