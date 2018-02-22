@@ -85,7 +85,7 @@ def train():
         else:
             alpha = 0.5
         curepoch += 1 
-
+        
         class_weights.cuda()
         seg_criterion = nn.NLLLoss2d()
         cls_criterion = nn.BCEWithLogitsLoss()
