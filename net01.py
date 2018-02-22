@@ -78,10 +78,10 @@ class OffsetNet(nn.Module):
         self.conv13 = nn.Conv2d(inchannel * 2, inchannel * 2, 3, padding=2, dilation=2)
         self.bn13 = nn.BatchNorm2d(inchannel * 2)
 
-        self.conv21 = nn.Conv2d(inchannel * 2, inchannel, 1, padding=1)
-        self.bn21 = nn.BatchNorm2d(inchannel)
+        self.conv21 = nn.Conv2d(inchannel * 2, inchannel * 2, 1, padding=1)
+        self.bn21 = nn.BatchNorm2d(inchannel * 2)
 
-        self.conv22 = nn.Conv2d(inchannel, 2, 1, padding=0)
+        self.conv22 = nn.Conv2d(inchannel * 2, 2, 1, padding=0)
 
     def forward(self, x):
         x = F.relu(self.conv11(x))
