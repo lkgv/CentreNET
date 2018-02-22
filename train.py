@@ -124,7 +124,7 @@ def train():
 
             cls_loss = cls_criterion(out_cls, y_cls)
 
-            if curepoch < 3:
+            if curepoch < 2:
                 loss = cls_loss
             else:
                 loss = seg_loss + alpha * cls_loss
