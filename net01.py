@@ -68,20 +68,20 @@ class OffsetNet(nn.Module):
     def __init__(self, inchannel):
         super(OffsetNet, self).__init__()
 
-        self.conv11 = nn.Conv2d(inchannel, inchannel, 3, padding=2, dilation=2)
+        self.conv11 = nn.Conv2d(inchannel, inchannel * 2, 3, padding=2, dilation=2)
         self.bn11 = nn.BatchNorm2d(inchannel)
 
         # self.offset12 = ConvOffset2D(inchannel // 2)
-        self.conv12 = nn.Conv2d(inchannel, inchannel, 3, padding=2, dilation=2)
-        self.bn12 = nn.BatchNorm2d(inchannel)
+        self.conv12 = nn.Conv2d(inchannel * 2, inchannel * 2, 3, padding=2, dilation=2)
+        self.bn12 = nn.BatchNorm2d(inchannel * 2)
 
-        self.conv21 = nn.Conv2d(inchannel, inchannel, 3, padding=2, dilation=2)
+        self.conv13 = nn.Conv2d(inchannel * 2, inchannel * 2, 3, padding=2, dilation=2)
+        self.bn13 = nn.BatchNorm2d(inchannel * 2)
+
+        self.conv21 = nn.Conv2d(inchannel * 2, inchannel, 1, padding=1)
         self.bn21 = nn.BatchNorm2d(inchannel)
 
-        self.conv22 = nn.Conv2d(inchannel, 256, 3, padding=1)
-        self.bn22 = nn.BatchNorm2d(256)
-
-        self.conv23 = nn.Conv2d(256, 2, 1, padding=0)
+        self.conv22 = nn.Conv2d(inchannel, 2, 1, padding=0)
 
     def forward(self, x):
         x = F.relu(self.conv11(x))
@@ -91,13 +91,13 @@ class OffsetNet(nn.Module):
         x = F.relu(self.conv12(x))
         x = self.bn12(x)
 
+        x = F.relu(self.conv13(x))
+        x = self.bn13(x)
+
         x = F.relu(self.conv21(x))
         x = self.bn21(x)
 
-        x = F.relu(self.conv22(x))
-        x = self.bn22(x)
-
-        x = self.conv23(x)
+        x = self.conv22(x)
 
         if DEBUG:
             print('X size',x.size())
@@ -148,19 +148,20 @@ class ConvNet(nn.Module):
         # self.offset = OffsetNet(inchannel)
 
 
-    def forward(self, x):
+    def forward(self, x, func):
         featuremap = self.features(x)
         if DEBUG:
             print('feature: ', featuremap.size())
 
-        offsetmap = self.offset(featuremap)
-        offsetmap = self.upspl_1(offsetmap)
-        offsetmap = self.upspl_2(offsetmap)
-        if DEBUG:
-            print('offset: ', offsetmap.size())
+        if func == 'cls':
+            classes = self.classifier(featuremap)
+            return classes
 
-        classes = self.classifier(featuremap)
-
-        return offsetmap, classes
-
+        elif func == 'offset':
+            offsetmap = self.offset(featuremap)
+            offsetmap = self.upspl_1(offsetmap)
+            offsetmap = self.upspl_2(offsetmap)
+            if DEBUG:
+                print('offset: ', offsetmap.size())
+            return offsetmap
 
