@@ -76,7 +76,7 @@ class OffsetNet(nn.Module):
         self.bn12 = nn.BatchNorm2d(2048)
 
         self.conv13 = nn.Conv2d(2048, 1024, 3, padding=2, dilation=2)
-        self.bn13 = nn.BatchNorm2d(512)
+        self.bn13 = nn.BatchNorm2d(1024)
 
         self.conv21 = nn.Conv2d(1024, 512, 3, padding=2, dilation=2)
         self.bn21 = nn.BatchNorm2d(512)
@@ -97,11 +97,11 @@ class OffsetNet(nn.Module):
         x = F.relu(self.conv21(x))
         x = self.bn21(x)
 
-        x = self.conv22(x)
+        x = self.conv22(x) * 512.0
 
         if DEBUG:
             print('X size',x.size())
-        return x
+        return
 
 class ClassNet(nn.Module):
     def __init__(self, inchannel, nclass):
