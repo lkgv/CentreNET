@@ -143,8 +143,8 @@ class ConvNet(nn.Module):
         self.classifier = ClassNet(inchannel, 21)
         self.offset = OffsetNet(inchannel)
 
-        self.upspl_1 = nn.UpsamplingBilinear2d(scale_factor=2)
-        self.upspl_2 = nn.UpsamplingBilinear2d(scale_factor=2)
+        self.upspl_1 = nn.Upsample(scale_factor=2, mode='nearest')
+        self.upspl_2 = nn.Upsample(scale_factor=2, mode='bilinear')
         # self.classifier = ClassNet(inchannel, nclass)
         # self.offset = OffsetNet(inchannel)
 
