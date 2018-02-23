@@ -72,16 +72,20 @@ class OffsetNet(nn.Module):
         self.bn11 = nn.BatchNorm2d(1024)
 
         # self.offset12 = ConvOffset2D(inchannel // 2)
-        self.conv12 = nn.Conv2d(1024, 2048, 3, padding=2, dilation=2)
+        self.conv12 = nn.Conv2d(1024, 1024, 3, padding=2, dilation=2)
         self.bn12 = nn.BatchNorm2d(2048)
 
-        self.conv13 = nn.Conv2d(2048, 1024, 3, padding=2, dilation=2)
-        self.bn13 = nn.BatchNorm2d(1024)
+        self.conv13 = nn.Conv2d(1024, 512, 3, padding=2, dilation=2)
+        self.bn13 = nn.BatchNorm2d(512)
 
-        self.conv21 = nn.Conv2d(1024, 512, 3, padding=2, dilation=2)
+        self.upspl_1 = nn.Upsample(scale_factor=2, mode='nearest')
+
+        self.conv21 = nn.Conv2d(512, 512, 3, padding=2, dilation=2)
         self.bn21 = nn.BatchNorm2d(512)
 
-        self.conv22 = nn.Conv2d(512, 2, 1, padding=0)
+        self.upspl_2 = nn.Upsample(scale_factor=2, mode='nearest')
+
+        self.conv22 = nn.Conv2d(512, 2, 3, padding=2, dilation=2)
 
     def forward(self, x):
         x = F.relu(self.conv11(x))
@@ -94,8 +98,12 @@ class OffsetNet(nn.Module):
         x = F.relu(self.conv13(x))
         x = self.bn13(x)
 
+        x = self.upspl_1(x)
+
         x = F.relu(self.conv21(x))
         x = self.bn21(x)
+
+        x = self.upspl_2(x)
 
         x = self.conv22(x)
 
@@ -142,9 +150,6 @@ class ConvNet(nn.Module):
         inchannel = 512
         self.classifier = ClassNet(inchannel, 21)
         self.offset = OffsetNet(inchannel)
-
-        self.upspl_1 = nn.Upsample(scale_factor=2, mode='nearest')
-        self.upspl_2 = nn.Upsample(scale_factor=2, mode='bilinear')
         # self.classifier = ClassNet(inchannel, nclass)
         # self.offset = OffsetNet(inchannel)
 
@@ -160,8 +165,6 @@ class ConvNet(nn.Module):
 
         elif func == 'offset':
             offsetmap = self.offset(featuremap)
-            offsetmap = self.upspl_1(offsetmap)
-            offsetmap = self.upspl_2(offsetmap)
             if DEBUG:
                 print('offset: ', offsetmap.size())
                 print(offsetmap.size())
