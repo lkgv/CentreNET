@@ -73,7 +73,7 @@ class OffsetNet(nn.Module):
 
         # self.offset12 = ConvOffset2D(inchannel // 2)
         self.conv12 = nn.Conv2d(1024, 1024, 3, padding=2, dilation=2)
-        self.bn12 = nn.BatchNorm2d(2048)
+        self.bn12 = nn.BatchNorm2d(1024)
 
         self.conv13 = nn.Conv2d(1024, 512, 3, padding=2, dilation=2)
         self.bn13 = nn.BatchNorm2d(512)

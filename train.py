@@ -106,7 +106,7 @@ def train():
             y = y.squeeze(1)
 
             out, out_cls = None, None
-            if curepoch < 4 and curepoch % 2 == 1:
+            if curepoch < 1 and curepoch % 2 == 1:
                 out_cls = net(x, func='cls')
                 loss = cls_criterion(out_cls, y_cls)
             else:
