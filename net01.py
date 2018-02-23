@@ -97,11 +97,12 @@ class OffsetNet(nn.Module):
         x = F.relu(self.conv21(x))
         x = self.bn21(x)
 
-        x = self.conv22(x) * 512.0
+        x = self.conv22(x) * 512.0 - 128.0
 
         if DEBUG:
             print('X size',x.size())
-        return
+        print('in offset, x size:', x.size())
+        return x
 
 class ClassNet(nn.Module):
     def __init__(self, inchannel, nclass):
