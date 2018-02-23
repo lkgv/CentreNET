@@ -101,6 +101,7 @@ class OffsetNet(nn.Module):
 
         if DEBUG:
             print('X size',x.size())
+        print('in offset, x size:', x.size())
         return x
 
 class ClassNet(nn.Module):
