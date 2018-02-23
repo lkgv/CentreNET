@@ -101,7 +101,7 @@ class OffsetNet(nn.Module):
 
         if DEBUG:
             print('X size',x.size())
-        print('in offset, x size:', x.size())
+            print('in offset, x size:', x.size())
         return x
 
 class ClassNet(nn.Module):
@@ -160,10 +160,10 @@ class ConvNet(nn.Module):
 
         elif func == 'offset':
             offsetmap = self.offset(featuremap)
-            print(offsetmap.size())
             offsetmap = self.upspl_1(offsetmap)
             offsetmap = self.upspl_2(offsetmap)
             if DEBUG:
                 print('offset: ', offsetmap.size())
+                print(offsetmap.size())
             return offsetmap
 
