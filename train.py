@@ -110,7 +110,7 @@ def train():
             x, y, y_cls = Variable(x).cuda(), Variable(y).cuda(), Variable(y_cls).cuda()
 
             out, out_cls = None, None
-            if curepoch < 4 and curepoch % 2 == 1:
+            if curepoch < 0 and curepoch % 2 == 1:
                 out_cls = net(x, func='cls')
                 loss = cls_criterion(out_cls, y_cls)
             else:
