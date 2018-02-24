@@ -89,6 +89,11 @@ def train():
         seg_criterion = nn.NLLLoss2d()
         cls_criterion = nn.BCEWithLogitsLoss()
         mse_loss = nn.MSELoss()
+        d2_loss = (lambda a, b:
+                   torch.sum(
+                       torch.sqrt(
+                           torch.pow(a[:, 0, :, :] - b[:, 0, :, :], 2)
+                           + torch.pow(a[:, 1, :, :] - b[:, 1, :, :], 2))))
         # seg_criterion = nn.NLLLoss2d()
         # cls_criterion = nn.BCEWithLogitsLoss()
 
@@ -103,7 +108,6 @@ def train():
             steps += batch_size
             optimizer.zero_grad()
             x, y, y_cls = Variable(x).cuda(), Variable(y).cuda(), Variable(y_cls).cuda()
-            y = y.squeeze(1)
 
             out, out_cls = None, None
             if curepoch < 4 and curepoch % 2 == 1:
@@ -111,7 +115,8 @@ def train():
                 loss = cls_criterion(out_cls, y_cls)
             else:
                 out = net(x, func='offset')
-                loss = mse_loss(out.view(batch_size, -1), y.view(batch_size, -1))
+                # loss = mse_loss(out.view(batch_size, -1), y.view(batch_size, -1))
+                loss = d2_loss(out, y)
 
             epoch_losses.append(loss.data[0])
 
