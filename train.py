@@ -122,7 +122,7 @@ def train():
             '''
             out_cls = net(x, func='cls')
             cls_loss = cls_criterion(out_cls, y_cls)
-            if cls_loss < 0.3:
+            if int(cls_loss.data[0]) < 0.3:
                 out = net(x, func='offset')
                 out_cls = net(x, func='cls')
                 # loss = mse_loss(out.view(batch_size, -1), y.view(batch_size, -1))
