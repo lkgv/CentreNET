@@ -110,14 +110,14 @@ def train():
             x, y, y_cls = Variable(x).cuda(), Variable(y).cuda(), Variable(y_cls).cuda()
 
             out, out_cls = None, None
-            if curepoch < 0 and curepoch % 2 == 1:
+            if curepoch < 4 and curepoch % 2 == 1:
                 out_cls = net(x, func='cls')
                 loss = cls_criterion(out_cls, y_cls)
             else:
                 out = net(x, func='offset')
                 out_cls = net(x, func='cls')
                 # loss = mse_loss(out.view(batch_size, -1), y.view(batch_size, -1))
-                loss = d2_loss(out, y) + alpha * cls_criterion(out_cls, y_cls)
+                loss = d2_loss(out, y) / batch_size + alpha * cls_criterion(out_cls, y_cls)
 
             epoch_losses.append(loss.data[0])
 
