@@ -115,8 +115,9 @@ def train():
                 loss = cls_criterion(out_cls, y_cls)
             else:
                 out = net(x, func='offset')
+                out_cls = net(x, func='cls')
                 # loss = mse_loss(out.view(batch_size, -1), y.view(batch_size, -1))
-                loss = d2_loss(out, y)
+                loss = d2_loss(out, y) + alpha * cls_criterion(out_cls, y_cls)
 
             epoch_losses.append(loss.data[0])
 
