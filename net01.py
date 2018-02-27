@@ -166,4 +166,10 @@ class ConvNet(nn.Module):
                 print('offset: ', offsetmap.size())
                 print(offsetmap.size())
             return offsetmap
-
+        
+        elif func == 'all':
+            classes = self.classifier(featuremap)
+            offsetmap = self.offset(featuremap)
+            offsetmap = self.upspl_1(offsetmap)
+            offsetmap = self.upspl_2(offsetmap)
+            return classes, offsetmap

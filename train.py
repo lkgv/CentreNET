@@ -86,9 +86,10 @@ def train():
         curepoch += 1
         
         class_weights.cuda()
-        seg_criterion = nn.NLLLoss2d()
         cls_criterion = nn.BCEWithLogitsLoss()
         mse_loss = nn.MSELoss()
+        kl_loss = nn.KLDivLoss()
+        l1_loss = nn.L1Loss()
         # seg_criterion = nn.NLLLoss2d()
         # cls_criterion = nn.BCEWithLogitsLoss()
 
@@ -106,13 +107,13 @@ def train():
             y = y.squeeze(1)
 
             out, out_cls = None, None
-            if curepoch < 10 and curepoch % 2 == 2:
+            if curepoch < 10 and curepoch % 2 == 0:
                 out_cls = net(x, func='cls')
                 loss = cls_criterion(out_cls, y_cls)
             else:
                 out = net(x, func='offset')
-                loss = mse_loss(out.view(batch_size, -1), y.view(batch_size, -1))
-
+                # loss = kl_loss((256 + out) / 512.0, (256 + y) / 512.0)
+                loss = l1_loss(out.view(batch_size, -1), y.view(batch_size, -1))
             epoch_losses.append(loss.data[0])
 
             if DEBUG:
