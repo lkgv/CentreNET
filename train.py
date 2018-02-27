@@ -95,7 +95,7 @@ def train():
                        torch.sqrt(
                            torch.pow(a[:, 0, :, :] - b[:, 0, :, :], 2)
                            + torch.pow(a[:, 1, :, :] - b[:, 1, :, :], 2))))
-        smthL1_criterion = SmoothL1Loss()
+        smthL1_criterion = nn.SmoothL1Loss()
         # seg_criterion = nn.NLLLoss2d()
         # cls_criterion = nn.BCEWithLogitsLoss()
 
