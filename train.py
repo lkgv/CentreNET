@@ -133,8 +133,7 @@ def train():
                 print('out:', out.shape)
                 print('y:', y.shape)
 
-            status = '[{0}] loss:{1:0.4f}/{2:0.4f},cls:{3:0.4f}/{4:0.4f},\
-            ins:{5:0.4f}/{6:0.4f} LR:{7:0.6f}'.format(
+            status = '[{0}] loss:{1:0.4f}/{2:0.4f},cls:{3:0.4f}/{4:0.4f},ins:{5:0.4f}/{6:0.4f} LR:{7:0.6f}'.format(
                 epoch + 1,
                 loss.data[0],
                 np.mean(epoch_losses),
