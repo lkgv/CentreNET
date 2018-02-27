@@ -109,8 +109,8 @@ def train():
             optimizer.zero_grad()
             x, y, y_cls = Variable(x).cuda(), Variable(y).cuda(), Variable(y_cls).cuda()
 
-            out, out_cls = None, None
             '''
+            out, out_cls = None, None
             if curepoch < 4 and curepoch % 2 == 1:
                 out_cls = net(x, func='cls')
                 loss = cls_criterion(out_cls, y_cls)
@@ -122,11 +122,15 @@ def train():
             '''
             out_cls, out = net(x, func='all')
             cls_loss = cls_criterion(out_cls, y_cls)
+            ins_loss = smthL1_criterion(out, y)
+
+            '''
             if int(cls_loss.data[0]) < 0.3:
                 # loss = mse_loss(out.view(batch_size, -1), y.view(batch_size, -1))
                 loss = d2_loss(out, y) + alpha * cls_loss
             else:
                 loss = cls_loss
+            '''
 
             epoch_losses.append(loss.data[0])
 
