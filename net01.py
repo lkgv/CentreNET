@@ -78,16 +78,17 @@ class OffsetNet(nn.Module):
         self.conv13 = nn.Conv2d(1024, 256, 3, padding=2, dilation=2)
         self.bn13 = nn.BatchNorm2d(256)
 
-        self.upspl_1 = nn.Upsample(scale_factor=2, mode='nearest')
-
         self.conv21 = nn.Conv2d(256, 256, 3, padding=2, dilation=2)
         self.bn21 = nn.BatchNorm2d(256)
 
-        self.upspl_2 = nn.Upsample(scale_factor=2, mode='nearest')
-
         self.conv22 = nn.Conv2d(256, 2, 3, padding=2, dilation=2)
 
+        self.upspl_1 = nn.Upsample(scale_factor=2, mode='bilinear')
+        self.upspl_2 = nn.Upsample(scale_factor=2, mode='bilinear')
+
     def forward(self, x):
+        fin = x.contiguous()
+
         x = F.relu(self.conv11(x))
         x = self.bn11(x)
 
@@ -98,33 +99,35 @@ class OffsetNet(nn.Module):
         x = F.relu(self.conv13(x))
         x = self.bn13(x)
 
-        x = self.upspl_1(x)
-
         x = F.relu(self.conv21(x))
+
         x = self.bn21(x)
 
-        x = self.upspl_2(x)
+        fon = x.contiguous()
+
+        classfeature = torch.cat((fon, fin), 1)
+        print(f'class: {classfeature.size()}')
 
         x = self.conv22(x)
+
+        x = self.upspl_1(x)
+        x = self.upspl_2(x)
 
         if DEBUG:
             print('X size',x.size())
             print('in offset, x size:', x.size())
-        return x #  * 512.0 - 128.0
+        return x, classfeature #  * 512.0 - 128.0
 
 class ClassNet(nn.Module):
     def __init__(self, inchannel, nclass):
         super(ClassNet, self).__init__()
 
-        self.conv11 = nn.Conv2d(inchannel, 2048, 7, padding=6, dilation=2)
-        self.bn11 = nn.BatchNorm2d(2048)
+        self.conv11 = nn.Conv2d(inchannel, 1024, 3, padding=2, dilation=2)
+        self.bn11 = nn.BatchNorm2d(1024)
 
         self.avgpool = nn.AdaptiveAvgPool2d(1)
 
-        self.lin1 = nn.Linear(2048, 2048)
-        self.drop1 = nn.Dropout(0.5)
-
-        self.lin2 = nn.Linear(2048, nclass)
+        self.lin1 = nn.Linear(1024, nclass)
 
     def forward(self, x):
         x = F.relu(self.conv11(x))
@@ -133,10 +136,7 @@ class ClassNet(nn.Module):
         x = self.avgpool(x)
         x = x.squeeze(3).squeeze(2)
 
-        x = F.relu(self.lin1(x))
-        x = self.drop1(x)
-
-        x = self.lin2(x)
+        x = self.lin1(x)
 
         return x
 
@@ -149,7 +149,7 @@ class ConvNet(nn.Module):
 
         inchannel = 512
         self.classifier = ClassNet(inchannel, 21)
-        self.offset = OffsetNet(inchannel)
+        self.offset = OffsetNet(inchannel + 256)
         # self.classifier = ClassNet(inchannel, nclass)
         # self.offset = OffsetNet(inchannel)
 
@@ -171,7 +171,7 @@ class ConvNet(nn.Module):
             return offsetmap
 
         elif func == 'all':
-            classes = self.classifier(featuremap)
-            offsetmap = self.offset(featuremap)
+            offsetmap, classmap = self.offset(featuremap)
+            classes = self.classifier(classmap)
             return classes, offsetmap
 
