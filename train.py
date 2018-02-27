@@ -89,6 +89,7 @@ def train():
         seg_criterion = nn.NLLLoss2d()
         cls_criterion = nn.BCEWithLogitsLoss()
         mse_loss = nn.MSELoss()
+        l1_loss = nn.L1Loss()
         d2_loss = (lambda a, b:
                    torch.sum(
                        torch.sqrt(
@@ -110,23 +111,24 @@ def train():
             x, y, y_cls = Variable(x).cuda(), Variable(y).cuda(), Variable(y_cls).cuda()
 
             out, out_cls = None, None
-            '''
-            if curepoch < 4 and curepoch % 2 == 1:
+            
+            if curepoch < 0 and curepoch % 2 == 1:
                 out_cls = net(x, func='cls')
                 loss = cls_criterion(out_cls, y_cls)
             else:
                 out = net(x, func='offset')
                 out_cls = net(x, func='cls')
                 # loss = mse_loss(out.view(batch_size, -1), y.view(batch_size, -1))
-                loss = d2_loss(out, y) / batch_size + alpha * cls_criterion(out_cls, y_cls)
+                loss = l1_loss(out.view(batch_size, -1), y.view(batch_size, -1)) + alpha * cls_criterion(out_cls, y_cls)
             '''
             out_cls, out = net(x, func='all')
             cls_loss = cls_criterion(out_cls, y_cls)
-            if int(cls_loss.data[0]) < 0.3:
+            if float(cls_loss.data[0]) < 0.4:
                 # loss = mse_loss(out.view(batch_size, -1), y.view(batch_size, -1))
                 loss = d2_loss(out, y) / batch_size + alpha * cls_loss
             else:
                 loss = cls_loss
+            '''
 
             epoch_losses.append(loss.data[0])
 
