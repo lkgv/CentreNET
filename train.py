@@ -74,7 +74,7 @@ def train():
 
     optimizer = optim.Adam(net.parameters(), lr=float(config('train', 'LR')))
 
-    scheduler = MultiStepLR(optimizer, milestones=[x * 3 for x in range(1, 10)], gamma=0.83)
+    scheduler = MultiStepLR(optimizer, milestones=[x * 1 for x in range(1, 100)], gamma=0.9)
 
     max_steps = 5428
 
@@ -101,6 +101,8 @@ def train():
 
         batch_size = int(config('train', 'BATCH_SIZE'))
         epoch_losses = []
+        epoch_cls_losses = []
+        epoch_ins_losses = []
 
         train_iterator = tqdm(train_loader, total=max_steps // batch_size + 1)
         steps = 0
@@ -124,8 +126,8 @@ def train():
                 loss = l1_loss(out.view(batch_size, -1), y.view(batch_size, -1)) + alpha * cls_criterion(out_cls, y_cls)
             '''
             out_cls, out = net(x, func='all')
-            cls_loss = cls_criterion(out_cls, y_cls)
-            ins_loss = smthL1_criterion(out, y)
+            cls_loss = torch.abs(cls_criterion(out_cls, y_cls))
+            ins_loss = torch.abs(smthL1_criterion(out, y))
             loss = ins_loss + alpha * cls_loss
 
             '''
@@ -138,6 +140,8 @@ def train():
             '''
 
             epoch_losses.append(loss.data[0])
+            epoch_cls_losses.append(cls_loss.data[0])
+            epoch_ins_losses.append(ins_loss.data[0])
 
             if DEBUG:
                 print('x:', x.size())
@@ -148,10 +152,14 @@ def train():
                 print('out:', out.shape)
                 print('y:', y.shape)
 
-            status = '[{0}] loss = {1:0.5f} avg = {2:0.5f}, LR = {3:0.7f}'.format(
+            status = '[{0}] loss:{1:0.4f}/{2:0.4f},cls:{3:0.4f}/{4:0.4f},ins:{5:0.4f}/{6:0.4f} LR:{7:0.5f}'.format(
                 epoch + 1,
                 loss.data[0],
                 np.mean(epoch_losses),
+                cls_loss.data[0],
+                np.mean(epoch_cls_losses),
+                ins_loss.data[0],
+                np.mean(epoch_ins_losses),
                 scheduler.get_lr()[0])
             train_iterator.set_description(status)
             loss.backward()

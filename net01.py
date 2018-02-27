@@ -88,7 +88,6 @@ class OffsetNet(nn.Module):
 
     def forward(self, x):
         fin = x.contiguous()
-        print('fin: ', fin.size())
         x = F.relu(self.conv11(x))
         x = self.bn11(x)
 
@@ -103,8 +102,9 @@ class OffsetNet(nn.Module):
 
         x = self.bn21(x)
 
-        classfeature = torch.cat((x, fin), 1)
-        print(f'classsize: {classfeature.size()}, xsize: {x.size()}, finsize: {fin.size()}')
+        fon = x.contiguous()
+
+        classfeature = torch.cat((fon, fin), 1)
 
         x = self.conv22(x)
 
@@ -146,8 +146,8 @@ class ConvNet(nn.Module):
         self.features = Vgg16FeatureNet() # Dense121FeatureNet()
 
         inchannel = 512
-        self.classifier = ClassNet(inchannel, 21)
-        self.offset = OffsetNet(inchannel + 256)
+        self.classifier = ClassNet(inchannel + 256, 21)
+        self.offset = OffsetNet(inchannel)
         # self.classifier = ClassNet(inchannel, nclass)
         # self.offset = OffsetNet(inchannel)
 
