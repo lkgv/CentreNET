@@ -74,7 +74,7 @@ def train():
 
     optimizer = optim.Adam(net.parameters(), lr=float(config('train', 'LR')))
 
-    scheduler = MultiStepLR(optimizer, milestones=[x * 1 for x in range(1, 10)], gamma=0.5)
+    scheduler = MultiStepLR(optimizer, milestones=[x * 1 for x in range(1, 100)], gamma=0.5)
 
     max_steps = 5428
 
@@ -134,7 +134,7 @@ def train():
                 print('y:', y.shape)
 
             status = '[{0}] loss:{1:0.4f}/{2:0.4f},cls:{3:0.4f}/{4:0.4f},\
-            ins:{5:0.4f}/{6:0.4f} LR:{7:0.5f}'.format(
+            ins:{5:0.4f}/{6:0.4f} LR:{7:0.6f}'.format(
                 epoch + 1,
                 loss.data[0],
                 np.mean(epoch_losses),
