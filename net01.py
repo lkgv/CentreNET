@@ -87,7 +87,8 @@ class OffsetNet(nn.Module):
         self.upspl_2 = nn.Upsample(scale_factor=2, mode='bilinear')
 
     def forward(self, x):
-        fin = x + 0
+        fin = x.contiguous()
+
         x = F.relu(self.conv11(x))
         x = self.bn11(x)
 
@@ -102,7 +103,10 @@ class OffsetNet(nn.Module):
 
         x = self.bn21(x)
 
-        classfeature = torch.cat((x, fin), 1)
+        fon = x.contiguous()
+
+        classfeature = torch.cat((fon, fin), 1)
+        print(f'class: {classfeature.size()}')
 
         x = self.conv22(x)
 
