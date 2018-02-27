@@ -110,7 +110,7 @@ class OffsetNet(nn.Module):
         if DEBUG:
             print('X size',x.size())
             print('in offset, x size:', x.size())
-        return x * 512.0 - 128.0
+        return x #  * 512.0 - 128.0
 
 class ClassNet(nn.Module):
     def __init__(self, inchannel, nclass):

@@ -14,7 +14,7 @@ import numpy as np
 import VOC2012
 from net01 import ConvNet
 from utils import Configures
-
+from loss import SmoothL1Loss
 
 DEBUG = False
 
@@ -74,7 +74,7 @@ def train():
 
     optimizer = optim.Adam(net.parameters(), lr=float(config('train', 'LR')))
 
-    scheduler = MultiStepLR(optimizer, milestones=[x * 5 for x in range(1, 10)], gamma=0.5)
+    scheduler = MultiStepLR(optimizer, milestones=[x * 10 for x in range(1, 10)], gamma=0.5)
 
     max_steps = 5428
 
@@ -89,11 +89,13 @@ def train():
         seg_criterion = nn.NLLLoss2d()
         cls_criterion = nn.BCEWithLogitsLoss()
         mse_loss = nn.MSELoss()
+        l1_loss = nn.L1Loss()
         d2_loss = (lambda a, b:
                    torch.sum(
                        torch.sqrt(
                            torch.pow(a[:, 0, :, :] - b[:, 0, :, :], 2)
                            + torch.pow(a[:, 1, :, :] - b[:, 1, :, :], 2))))
+        smthL1_criterion = SmoothL1Loss()
         # seg_criterion = nn.NLLLoss2d()
         # cls_criterion = nn.BCEWithLogitsLoss()
 
@@ -111,24 +113,28 @@ def train():
 
             '''
             out, out_cls = None, None
-            if curepoch < 4 and curepoch % 2 == 1:
+
+            if curepoch < 0 and curepoch % 2 == 1:
+
                 out_cls = net(x, func='cls')
                 loss = cls_criterion(out_cls, y_cls)
             else:
                 out = net(x, func='offset')
                 out_cls = net(x, func='cls')
                 # loss = mse_loss(out.view(batch_size, -1), y.view(batch_size, -1))
-                loss = d2_loss(out, y) + alpha * cls_criterion(out_cls, y_cls)
+                loss = l1_loss(out.view(batch_size, -1), y.view(batch_size, -1)) + alpha * cls_criterion(out_cls, y_cls)
             '''
             out_cls, out = net(x, func='all')
             cls_loss = cls_criterion(out_cls, y_cls)
             ins_loss = smthL1_criterion(out, y)
+            loss = ins_loss + alpha * cls_loss
 
             '''
-            if int(cls_loss.data[0]) < 0.3:
+            if float(cls_loss.data[0]) < 0.4:
+
                 # loss = mse_loss(out.view(batch_size, -1), y.view(batch_size, -1))
-                loss = d2_loss(out, y) + alpha * cls_loss
-            else:
+                loss = d2_loss(out, y) / batch_size + alpha * cls_loss
+             else:
                 loss = cls_loss
             '''
 
