@@ -14,7 +14,7 @@ import numpy as np
 import VOC2012
 from net01 import ConvNet
 from utils import Configures
-
+from loss import SmoothL1Loss
 
 DEBUG = False
 
@@ -74,7 +74,7 @@ def train():
 
     optimizer = optim.Adam(net.parameters(), lr=float(config('train', 'LR')))
 
-    scheduler = MultiStepLR(optimizer, milestones=[x * 5 for x in range(1, 10)], gamma=0.5)
+    scheduler = MultiStepLR(optimizer, milestones=[x * 3 for x in range(1, 10)], gamma=0.83)
 
     max_steps = 5428
 
@@ -90,6 +90,12 @@ def train():
         mse_loss = nn.MSELoss()
         kl_loss = nn.KLDivLoss()
         l1_loss = nn.L1Loss()
+        d2_loss = (lambda a, b:
+                   torch.sum(
+                       torch.sqrt(
+                           torch.pow(a[:, 0, :, :] - b[:, 0, :, :], 2)
+                           + torch.pow(a[:, 1, :, :] - b[:, 1, :, :], 2))))
+        smthL1_criterion = nn.SmoothL1Loss()
         # seg_criterion = nn.NLLLoss2d()
         # cls_criterion = nn.BCEWithLogitsLoss()
 
@@ -104,16 +110,33 @@ def train():
             steps += batch_size
             optimizer.zero_grad()
             x, y, y_cls = Variable(x).cuda(), Variable(y).cuda(), Variable(y_cls).cuda()
-            y = y.squeeze(1)
 
+            '''
             out, out_cls = None, None
-            if curepoch < 10 and curepoch % 2 == 0:
+
+            if curepoch < 0 and curepoch % 2 == 1:
+
                 out_cls = net(x, func='cls')
                 loss = cls_criterion(out_cls, y_cls)
             else:
-                out = net(x, func='offset')
-                # loss = kl_loss((256 + out) / 512.0, (256 + y) / 512.0)
-                loss = l1_loss(out.view(batch_size, -1), y.view(batch_size, -1))
+                out_cls = net(x, func='cls')
+                # loss = mse_loss(out.view(batch_size, -1), y.view(batch_size, -1))
+                loss = l1_loss(out.view(batch_size, -1), y.view(batch_size, -1)) + alpha * cls_criterion(out_cls, y_cls)
+            '''
+            out_cls, out = net(x, func='all')
+            cls_loss = cls_criterion(out_cls, y_cls)
+            ins_loss = smthL1_criterion(out, y)
+            loss = ins_loss + alpha * cls_loss
+
+            '''
+            if float(cls_loss.data[0]) < 0.4:
+
+                # loss = mse_loss(out.view(batch_size, -1), y.view(batch_size, -1))
+                loss = d2_loss(out, y) / batch_size + alpha * cls_loss
+             else:
+                loss = cls_loss
+            '''
+
             epoch_losses.append(loss.data[0])
 
             if DEBUG:
