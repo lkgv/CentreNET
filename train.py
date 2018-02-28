@@ -12,7 +12,7 @@ import logging
 import numpy as np
 
 import VOC2012
-from net01 import ConvNet
+from net02 import ConvNet
 from utils import Configures
 from loss import SmoothL1Loss
 
