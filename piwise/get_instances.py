@@ -72,7 +72,7 @@ class Instance(Dataset):
 
         annotation = torch.Tensor(annotation)
         offset = torch.Tensor(offset).transpose(0, 2).transpose(1, 2)
-        seg = torch.Tensor(png2mask(seg))
+        seg = torch.Tensor(png2mask(seg).astype(int))
 
         return image, offset, annotation, seg
 
