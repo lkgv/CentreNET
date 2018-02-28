@@ -187,6 +187,22 @@ class OffsetNet(nn.Module):
             print('in offset, x size:', x.size())
         return x, classfeature #  * 512.0 - 128.0
 
+class SegNet(nn.Module):
+    def __init__(self, inchannel, nclass):
+        super(OffsetNet, self).__init__()
+
+        self.conv11 = nn.Conv2d(inchannel, nclass, 3, padding=1)
+
+        self.upspl_1 = nn.Upsample(scale_factor=2, mode='bilinear')
+        self.upspl_2 = nn.Upsample(scale_factor=2, mode='bilinear')
+
+    def forward(self, x):
+        x = self.conv11(x)
+
+        x = self.upspl_1(x)
+        x = self.upspl_2(x)
+        return x
+
 class ClassNet(nn.Module):
     def __init__(self, inchannel, nclass):
         super(ClassNet, self).__init__()
@@ -216,6 +232,7 @@ class ConvNet(nn.Module):
         nclass = int(config('data', 'NUM_CLASSES'))
         inchannel = 512
 
+        self.seg = SegNet(inchannel, nclass)
         self.features = Vgg16FeatureNet() # Dense121FeatureNet()
         self.classifier = ClassNet(2, nclass)
         self.offset = OffsetNet(20)
@@ -249,4 +266,8 @@ class ConvNet(nn.Module):
             offsetmap, classmap = self.offset(skips)
             classes = self.classifier(classmap)
             return classes, offsetmap
+
+        elif func == 'seg':
+            segmap = self.seg(featuremap)
+            return segmap
 
