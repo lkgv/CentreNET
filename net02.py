@@ -87,6 +87,7 @@ class Convert4xNet(nn.Module):
         self.pool2 = nn.MaxPool2d(2)
 
     def forward(self, x):
+        print(type(x))
         x = F.relu(self.conv1(x))
         x = self.bn1(x)
 
@@ -223,7 +224,7 @@ class ConvNet(nn.Module):
                            self.converter[2](middle[2]),
                            self.converter[3](middle[3]),
                            self.converter[4](middle[4])),
-                          1)
+                          1).contiguous()
 
         if func == 'cls':
             classes = self.classifier(featuremap)
