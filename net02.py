@@ -66,7 +66,7 @@ class Vgg16FeatureNet(nn.Module):
         for name, layer in self.named_children():
             x = layer(x)
             if name in tagged:
-                middle.append(x.continuous())
+                middle.append(x.contiguous())
         return x, middle
 
 class Convert4xNet(nn.Module):
