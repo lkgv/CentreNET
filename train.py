@@ -117,10 +117,10 @@ def train():
             x, y, y_cls, y_seg = Variable(x).cuda(), Variable(y).cuda(), Variable(y_cls).cuda(), Variable(y_seg).cuda()
             if curepoch < int(config('train', 'SEG_EPOCH')):
                 out_seg = net(x, func='seg')
-                loss = torch.abs(nll_criterion(out_seg, y_seg))
+                loss = nll_criterion(out_seg, y_seg)
                 epoch_losses.append(loss.data[0])
 
-                status = '[{0}] Segmentation; loss:{1:0.6f}/{2:0.6f}, LR:{7:0.8f}'.format(
+                status = '[{0}] Segmentation; loss:{1:0.6f}/{2:0.6f}, LR:{3:0.8f}'.format(
                     epoch + 1,
                     loss.data[0],
                     np.mean(epoch_losses),
