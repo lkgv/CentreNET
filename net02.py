@@ -220,7 +220,7 @@ class ConvNet(nn.Module):
         featuremap, middle = self.features(x)
         skips = []
         for i in range(5):
-            skips.add(self.converter[i](middle[i]))
+            skips.append(self.converter[i](middle[i]))
         skips = torch.cat(skips, 1)
 
         if func == 'cls':
