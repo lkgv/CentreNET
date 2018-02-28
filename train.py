@@ -74,7 +74,7 @@ def train():
 
     optimizer = optim.Adam(net.parameters(), lr=float(config('train', 'LR')))
 
-    scheduler = MultiStepLR(optimizer, milestones=[x * 1 for x in range(1, 100)], gamma=0.5)
+    scheduler = MultiStepLR(optimizer, milestones=[x * 10 for x in range(0, 100)], gamma=0.83)
 
     max_steps = 5428
 
