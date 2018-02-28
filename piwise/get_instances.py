@@ -7,6 +7,7 @@ import xmltodict
 import os
 import torch
 from torch.utils.data import Dataset
+from .segpng2mask import png2mask
 
 class Instance(Dataset):
     def __init__(self, root, mode='trainval', input_transform=None, target_transform=None):
@@ -45,6 +46,9 @@ class Instance(Dataset):
                                '{}.jpg'.format(fileid))
         with open(imgfile, 'rb') as f:
             image = Image.open(f).convert('RGB')
+        segmentsfile = os.path.join(self.segments_root,
+                                    '{}.png'.format(fileid))
+        seg = sio.imread(segmentsfile)
         offsetfile = os.path.join(self.offset_root,
                                   '{}.npy'.format(fileid))
         offset = np.load(offsetfile)
@@ -65,18 +69,12 @@ class Instance(Dataset):
             annotation, segmentation = self.target_transform(
                 annotation, segmentation)
         '''
-        # if image is not None:
-        #    print('image:', type(image))
-        # image.cuda()
-        # print('image: ', image.size())
+
         annotation = torch.Tensor(annotation)
-        offset = torch.Tensor(offset).transpose(0, 2).transpose(1, 2)#[:, :256, :256]
-        #print('Image:', image.size())
-        #print('anno:', annotation.size())
-        #print('offset:', offset.size())
-        # a, b, c = image.size()
-        # v = image[:, :min(b,300), :min(c, 100)]
-        return image, offset, annotation #np.random.randn(3, 45, 70)#offset #image #, #annotation, offset # segmentation
+        offset = torch.Tensor(offset).transpose(0, 2).transpose(1, 2)
+        seg = torch.Tensor(png2mask(seg))
+
+        return image, offset, annotation, seg
 
     def __len__(self):
         return len(self.imglist)

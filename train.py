@@ -100,6 +100,7 @@ def train():
                            + torch.pow(a[:, 1, :, :] - b[:, 1, :, :], 2))))
         '''
         smthL1_criterion = nn.SmoothL1Loss()
+        nll_criterion = nn.NLLLoss2d()
 
         batch_size = int(config('train', 'BATCH_SIZE'))
         epoch_losses = []
@@ -110,38 +111,40 @@ def train():
         steps = 0
 
         net.train()
-        for x, y, y_cls in train_iterator:
+        for x, y, y_cls, y_seg in train_iterator:
             steps += batch_size
             optimizer.zero_grad()
-            x, y, y_cls = Variable(x).cuda(), Variable(y).cuda(), Variable(y_cls).cuda()
+            x, y, y_cls, y_seg = Variable(x).cuda(), Variable(y).cuda(), Variable(y_cls).cuda(), Variable(y_seg).cuda()
+            if curepoch < int(config('train', 'SEG_EPOCH')):
+                out_seg = net(x, func='seg')
+                loss = torch.abs(nll_criterion(out, y_seg))
+                epoch_losses.append(loss.data[0])
 
-            out_cls, out = net(x, func='all')
-            cls_loss = torch.abs(cls_criterion(out_cls, y_cls))
-            ins_loss = torch.abs(smthL1_criterion(out, y))
-            loss = ins_loss + alpha * cls_loss
+                status = '[{0}] Segmentation; loss:{1:0.6f}/{2:0.6f}, LR:{7:0.8f}'.format(
+                    epoch + 1,
+                    loss.data[0],
+                    np.mean(epoch_losses),
+                    scheduler.get_lr()[0])
 
-            epoch_losses.append(loss.data[0])
-            epoch_cls_losses.append(cls_loss.data[0])
-            epoch_ins_losses.append(ins_loss.data[0])
+            else:
+                out_cls, out, out_seg = net(x, func='all')
+                cls_loss = torch.abs(cls_criterion(out_cls, y_cls))
+                ins_loss = torch.abs(smthL1_criterion(out, y))
+                loss = ins_loss + alpha * cls_loss
 
-            if DEBUG:
-                print('x:', x.size())
-                print('y:', y.size())
-                print('y_cls:', y_cls.size())
-                print('out:', out.size())
-                print('out_cls:', out_cls.size())
-                print('out:', out.shape)
-                print('y:', y.shape)
+                epoch_losses.append(loss.data[0])
+                epoch_cls_losses.append(cls_loss.data[0])
+                epoch_ins_losses.append(ins_loss.data[0])
 
-            status = '[{0}] loss:{1:0.4f}/{2:0.4f},cls:{3:0.4f}/{4:0.4f},ins:{5:0.4f}/{6:0.4f} LR:{7:0.6f}'.format(
-                epoch + 1,
-                loss.data[0],
-                np.mean(epoch_losses),
-                cls_loss.data[0],
-                np.mean(epoch_cls_losses),
-                ins_loss.data[0],
-                np.mean(epoch_ins_losses),
-                scheduler.get_lr()[0])
+                status = '[{0}] loss:{1:0.4f}/{2:0.4f},cls:{3:0.4f}/{4:0.4f},ins:{5:0.4f}/{6:0.4f} LR:{7:0.6f}'.format(
+                    epoch + 1,
+                    loss.data[0],
+                    np.mean(epoch_losses),
+                    cls_loss.data[0],
+                    np.mean(epoch_cls_losses),
+                    ins_loss.data[0],
+                    np.mean(epoch_ins_losses),
+                    scheduler.get_lr()[0])
 
             train_iterator.set_description(status)
             loss.backward()
