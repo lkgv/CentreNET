@@ -189,7 +189,7 @@ class OffsetNet(nn.Module):
 
 class SegNet(nn.Module):
     def __init__(self, inchannel, nclass):
-        super(OffsetNet, self).__init__()
+        super(SegNet, self).__init__()
 
         self.conv11 = nn.Conv2d(inchannel, nclass, 3, padding=1)
 
