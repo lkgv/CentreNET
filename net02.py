@@ -212,9 +212,9 @@ class ConvNet(nn.Module):
         self.features = Vgg16FeatureNet() # Dense121FeatureNet()
         self.classifier = ClassNet(2, nclass)
         self.offset = OffsetNet(20)
-        self.converter = [Convert4xNet(), Convert4xNet(),
-                          Convert2xNet(),
-                          Convert1xNet(), Convert1xNet()]
+        self.converter = [Convert4xNet(3), Convert4xNet(64),
+                          Convert2xNet(128),
+                          Convert1xNet(256), Convert1xNet(512)]
 
     def forward(self, x, func):
         featuremap, middle = self.features(x)
