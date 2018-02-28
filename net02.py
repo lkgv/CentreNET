@@ -66,7 +66,7 @@ class Vgg16FeatureNet(nn.Module):
         for name, layer in self.named_children():
             x = layer(x)
             if name in tagged:
-                middle.append(x.continuous())
+                middle.append(x.contiguous())
         return x, middle
 
 class Convert4xNet(nn.Module):
@@ -218,7 +218,9 @@ class ConvNet(nn.Module):
 
     def forward(self, x, func):
         featuremap, middle = self.features(x)
-        skips = (self.converter[i](middle[i]) for i in range(5))
+        skips = []
+        for i in range(5):
+            skips.add(self.converter[i](middle[i]))
         skips = torch.cat(skips, 1)
 
         if func == 'cls':
