@@ -218,10 +218,12 @@ class ConvNet(nn.Module):
 
     def forward(self, x, func):
         featuremap, middle = self.features(x)
-        skips = []
-        for i in range(5):
-            skips.append(self.converter[i](middle[i]))
-        skips = torch.cat(skips, 1)
+        skips = torch.cat((self.converter[0](middle[0]),
+                           self.converter[1](middle[1]),
+                           self.converter[2](middle[2]),
+                           self.converter[3](middle[3]),
+                           self.converter[4](middle[4])),
+                          1)
 
         if func == 'cls':
             classes = self.classifier(featuremap)
