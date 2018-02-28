@@ -60,14 +60,21 @@ class Vgg16FeatureNet(nn.Module):
                 self.add_module(name, layer)
 
     def forward(self, x):
-        middle = [x]
+        middle0 = x.contiguous()
         tagged = ['5', '12', '22', '42']
 
         for name, layer in self.named_children():
             x = layer(x)
-            if name in tagged:
-                middle.append(x.contiguous())
-        return x, middle
+            if name == '5':
+                middle1 = x.contiguous()
+            elif name == '12':
+                middle2 = x.contiguous()
+            elif name == '22':
+                middle3 = x.contiguous()
+            elif name == '42':
+                middle4 = x.contiguous()
+
+        return x, middle0, middle1, middle2, middle3, middle4
 
 class Convert4xNet(nn.Module):
     def __init__(self, inchannel):
@@ -212,18 +219,20 @@ class ConvNet(nn.Module):
         self.features = Vgg16FeatureNet() # Dense121FeatureNet()
         self.classifier = ClassNet(2, nclass)
         self.offset = OffsetNet(20)
-        self.converter = [Convert4xNet(3), Convert4xNet(64),
-                          Convert2xNet(128),
-                          Convert1xNet(256), Convert1xNet(512)]
+        self.converter0 = Convert4xNet(3)
+        self.converter1 = Convert4xNet(64)
+        self.converter2 = Convert2xNet(128)
+        self.converter3 = Convert1xNet(256)
+        self.converter4 = Convert1xNet(512)
 
     def forward(self, x, func):
-        featuremap, middle = self.features(x)
-        skips = torch.cat((self.converter[0](middle[0]),
-                           self.converter[1](middle[1]),
-                           self.converter[2](middle[2]),
-                           self.converter[3](middle[3]),
-                           self.converter[4](middle[4])),
-                          1)
+        featuremap, middle0, middle1, middle2, middle3, middle4 = self.features(x)
+        skips = torch.cat((self.converter0(middle0),
+                           self.converter1(middle1),
+                           self.converter2(middle2),
+                           self.converter3(middle3),
+                           self.converter4(middle4)),
+                          1).contiguous()
 
         if func == 'cls':
             classes = self.classifier(featuremap)
