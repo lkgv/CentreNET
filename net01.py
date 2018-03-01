@@ -102,13 +102,13 @@ class OffsetNet(nn.Module):
 
         x = self.bn21(x)
 
-        fon = x.contiguous()
+        # fon = x.contiguous()
 
         x = self.conv22(x)
 
         fin = x.contiguous()
 
-        classfeature = torch.cat((fon, fin), 1)
+        classfeature = fin #torch.cat((fon, fin), 1)
 
         x = self.upspl_1(x)
         x = self.upspl_2(x)
@@ -148,7 +148,7 @@ class ConvNet(nn.Module):
         self.features = Vgg16FeatureNet() # Dense121FeatureNet()
 
         inchannel = 512
-        self.classifier = ClassNet(2 + 256, 21)
+        self.classifier = ClassNet(2, 21)
         self.offset = OffsetNet(inchannel)
         # self.classifier = ClassNet(inchannel, nclass)
         # self.offset = OffsetNet(inchannel)

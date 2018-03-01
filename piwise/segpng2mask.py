@@ -47,7 +47,7 @@ CLS_VEC = [threebyte2int(*x) for x in CLS_VEC]
 def png2mask(img):
     img = np.array(img).astype(int)
     x, y, _ = img.shape
-    out = np.zeros((x, y))
+    out = np.zeros((x, y)).astype(int)
 
     for i in range(x):
         for j in range(y):
