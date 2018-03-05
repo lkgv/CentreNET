@@ -74,7 +74,6 @@ class Instance(Dataset):
         offset = torch.Tensor(offset).transpose(0, 2).transpose(1, 2)
         seg = torch.LongTensor(png2mask(seg).astype(int))
 
-
         return image, offset, annotation, seg
 
     def __len__(self):
