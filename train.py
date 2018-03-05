@@ -11,8 +11,8 @@ import click
 import logging
 import numpy as np
 
-import VOC2012
-from net03 import ConvNet
+import VOCloader
+from models.net03 import ConvNet
 from utils import Configures
 from loss import SmoothL1Loss
 
@@ -68,7 +68,7 @@ def train():
 
     net, starting_epoch = init_net01(config=config)
 
-    voc_loader = VOC2012.Loader(configure=config)
+    voc_loader = VOCloader.Loader(configure=config)
     train_loader = voc_loader()
 
     optimizer = optim.Adam(net.parameters(), lr=base_lr)

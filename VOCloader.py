@@ -7,10 +7,10 @@ from torch.utils.data import DataLoader
 from torchvision.transforms import Compose, CenterCrop, Normalize
 from torchvision.transforms import ToTensor, ToPILImage
 
-from piwise.dataset import VOC12
-from piwise.get_instances import Instance
-from piwise.transform import Relabel, ToLabel, Colorize
-from piwise.transform_instance import target_transform
+from VOCdataset.dataset import VOC12
+from VOCdataset.get_instances import Instance
+from VOCdataset.transform import Relabel, ToLabel, Colorize
+from VOCdataset.transform_instance import target_transform
 
 class Loader:
     def __init__(self, configure):
