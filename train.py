@@ -74,9 +74,9 @@ def train():
 
     optimizer = optim.Adam(net.parameters(), lr=float(config('train', 'LR')))
 
-    scheduler = MultiStepLR(optimizer, milestones=[x * 10 for x in range(11, 100)], gamma=0.83)
+    scheduler = MultiStepLR(optimizer, milestones=[x * 5 for x in range(1, 100)], gamma=0.83)
 
-    max_steps = 5428
+    max_steps = int(config('data', 'SIZE'))
 
     alpha = float(config('train', 'ALPHA'))
 
@@ -114,6 +114,7 @@ def train():
         for x, y, y_cls, y_seg in train_iterator:
             steps += batch_size
             optimizer.zero_grad()
+
             x, y, y_cls, y_seg = Variable(x).cuda(), Variable(y).cuda(), Variable(y_cls).cuda(), Variable(y_seg).cuda()
             if curepoch < int(config('train', 'SEG_EPOCH')):
                 out_seg = net(x, func='seg')
