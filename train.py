@@ -17,20 +17,12 @@ from utils import Configures
 from loss import SmoothL1Loss
 
 DEBUG = False
-
-
-def build_network(snapshot, backend):
-    epoch = 0
-    backend = backend.lower()
-    net = models[backend]()
-    net = nn.DataParallel(net)
-    if snapshot is not None:
-        _, _, epoch = os.path.basename(snapshot).split('_')
-        epoch = int(epoch)
-        net.load_state_dict(torch.load(snapshot))
-        logging.info("Snapshot for epoch {} loaded from {}".format(epoch, snapshot))
-    net = net.cuda()
-    return net, epoch
+def weights_init(m):
+    classname=m.__class__.__name__
+    xavier = nn.init.xavier_normal
+    if classname.find('Conv') != -1:
+        xavier(m.weight.data)
+        xavier(m.bias.data)
 
 def init_net01(config):
     epoch = 0
@@ -72,6 +64,7 @@ def train():
     os.makedirs(models_path, exist_ok=True)
 
     net, starting_epoch = init_net01(config=config)
+    net.apply(weights_init)
 
     voc_loader = VOC2012.Loader(configure=config)
     train_loader = voc_loader()

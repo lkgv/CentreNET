@@ -53,7 +53,7 @@ class Dense121FeatureNet(nn.Module):
 class Vgg16FeatureNet(nn.Module):
     def __init__(self):
         super(Vgg16FeatureNet, self).__init__()
-        basenet = models.vgg16(pretrained=True).features
+        basenet = models.vgg16(pretrained=False).features
 
         for name, layer in basenet.named_children():
             if name not in ('16', '23', '30'):
