@@ -13,8 +13,8 @@ import click
 import logging
 import numpy as np
 
-import VOC2012
-from net01 import ConvNet
+import VOCloader
+from networks.net01 import ConvNet
 from utils import Configures
 
 model_name = 'net01_12'
@@ -57,7 +57,7 @@ def main():
 
     net, starting_epoch = init_net01(config=config)
 
-    voc_loader = VOC2012.Loader(configure=config)
+    voc_loader = VOCloader.Loader(configure=config)
 
     # train_loader, class_weights, n_images = voc_loader(data_path, batch_size, len(eval(gpu)))
     train_loader, class_weights, n_images = voc_loader()

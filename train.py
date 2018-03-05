@@ -12,7 +12,7 @@ import logging
 import numpy as np
 
 import VOCloader
-from models.net03 import ConvNet
+from networks.net03 import ConvNet
 from utils import Configures
 from loss import SmoothL1Loss
 
