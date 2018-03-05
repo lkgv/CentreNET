@@ -19,19 +19,22 @@ from loss import SmoothL1Loss
 DEBUG = False
 def weights_init(m):
     classname=m.__class__.__name__
-    xavier = nn.init.xavier_normal
-    if classname.find('Conv') != -1:
+    xavier = nn.init.kaiming_uniform
+    constant = nn.init.constant
+    if classname.find('Conv2d') != -1 or classname.find('Linear') != -1:
         xavier(m.weight.data)
-        xavier(m.bias.data)
+        constant(m.bias.data, 0.1)
 
 def init_net01(config):
     epoch = 0
     net = ConvNet(config)
     net = nn.DataParallel(net)
-    if config('train', 'SNAPSHOT') != 'None':
+    net.apply(weights_init)
+    snapshot = config('train', 'SNAPSHOT')
+    if snapshot != 'None':
         _, _, curepoch = os.path.basename(snapshot).split('_')
-        net.load_state_dict(torch.load(snapshot))
-        logging.info("Snapshot for epoch {} loaded from {}".format(epoch, cursnapshot))
+        net.load_state_dict(torch.load(os.path.join('models', snapshot)))
+        logging.info("Snapshot for epoch {} loaded from {}".format(curepoch, snapshot))
     net = net.cuda()
     return net, epoch
 
@@ -64,14 +67,13 @@ def train():
     os.makedirs(models_path, exist_ok=True)
 
     net, starting_epoch = init_net01(config=config)
-    net.apply(weights_init)
 
     voc_loader = VOC2012.Loader(configure=config)
     train_loader = voc_loader()
 
     optimizer = optim.Adam(net.parameters(), lr=base_lr)
     scheduler = MultiStepLR(optimizer,
-                            milestones=[x * milestone for x in range(1, 100)],
+                            milestones=[x * milestone for x in range(1, 1000)],
                             gamma=gamma)
     cls_criterion = nn.BCEWithLogitsLoss()
     ''' Losses tested for offsetmap
@@ -110,7 +112,7 @@ def train():
 
             if task == 'seg':
                 out_seg = net(x, func='seg')
-                loss = 100 * torch.abs(nll_criterion(out_seg, y_seg))
+                loss = torch.abs(nll_criterion(out_seg, y_seg))
                 epoch_losses.append(loss.data[0])
 
                 status = '[{0}] Segmentation; loss:{1:0.6f}/{2:0.6f}, LR:{3:0.8f}'.format(
