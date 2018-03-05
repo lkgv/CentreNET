@@ -1,2 +1,2 @@
 # CentreNET
-A centre of gravity based, nonproposal architecture for instance segmentation
+A centre of mass based, nonproposal architecture for instance segmentation
