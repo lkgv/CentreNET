@@ -12,7 +12,7 @@ import logging
 import numpy as np
 
 import VOC2012
-from net02 import ConvNet
+from net03 import ConvNet
 from utils import Configures
 from loss import SmoothL1Loss
 
@@ -25,22 +25,21 @@ def build_network(snapshot, backend):
     net = models[backend]()
     net = nn.DataParallel(net)
     if snapshot is not None:
-        _, epoch = os.path.basename(snapshot).split('_')
+        _, _, epoch = os.path.basename(snapshot).split('_')
         epoch = int(epoch)
         net.load_state_dict(torch.load(snapshot))
         logging.info("Snapshot for epoch {} loaded from {}".format(epoch, snapshot))
     net = net.cuda()
     return net, epoch
 
-def init_net01(config, snapshot = None):
+def init_net01(config):
     epoch = 0
     net = ConvNet(config)
     net = nn.DataParallel(net)
-    if snapshot is not None:
-        _, epoch = os.path.basename(snapshot).split('_')
-        epoch = int(epoch)
+    if config('train', 'SNAPSHOT') != 'None':
+        _, _, curepoch = os.path.basename(snapshot).split('_')
         net.load_state_dict(torch.load(snapshot))
-        logging.info("Snapshot for epoch {} loaded from {}".format(epoch, snapshot))
+        logging.info("Snapshot for epoch {} loaded from {}".format(epoch, cursnapshot))
     net = net.cuda()
     return net, epoch
 
@@ -55,10 +54,17 @@ def init_net01(config, snapshot = None):
 def train():
     config = Configures()
 
-    os.environ["CUDA_VISIBLE_DEVICES"] = config('train', 'WORKERS')
-    # net, starting_epoch = build_network(snapshot, backend)
-    # data_path = os.path.abspath(os.path.expanduser(data_path))
     seed = int(config('train', 'RANDOM_SEED'))
+    base_lr = float(config('train', 'LR'))
+    max_steps = int(config('data', 'SIZE'))
+    alpha = float(config('train', 'ALPHA'))
+    task = config('train', 'TASK') # 'seg'/'offset'
+    batch_size = int(config('train', 'BATCH_SIZE'))
+    epochnum = int(config('train', 'NUM_EPOCH'))
+    milestone = int(config('train', 'MILESTONE'))
+    gamma = float(config('train', 'GAMMA'))
+
+    os.environ["CUDA_VISIBLE_DEVICES"] = config('train', 'WORKERS')
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
 
@@ -68,41 +74,30 @@ def train():
     net, starting_epoch = init_net01(config=config)
 
     voc_loader = VOC2012.Loader(configure=config)
+    train_loader = voc_loader()
 
-    # train_loader, class_weights, n_images = voc_loader(data_path, batch_size, len(eval(gpu)))
-    train_loader, class_weights, n_images = voc_loader()
-
-    optimizer = optim.Adam(net.parameters(), lr=float(config('train', 'LR')))
-
-    scheduler = MultiStepLR(optimizer, milestones=[x * 5 for x in range(1, 100)], gamma=0.83)
-
-    max_steps = int(config('data', 'SIZE'))
-
-    alpha = float(config('train', 'ALPHA'))
+    optimizer = optim.Adam(net.parameters(), lr=base_lr)
+    scheduler = MultiStepLR(optimizer,
+                            milestones=[x * milestone for x in range(1, 100)],
+                            gamma=gamma)
+    cls_criterion = nn.BCEWithLogitsLoss()
+    ''' Losses tested for offsetmap
+    seg_criterion = nn.NLLLoss2d()
+    mse_loss = nn.MSELoss()
+    l1_loss = nn.L1Loss()
+    d2_loss = (lambda a, b:
+                torch.sum(
+                    torch.sqrt(
+                        torch.pow(a[:, 0, :, :] - b[:, 0, :, :], 2)
+                        + torch.pow(a[:, 1, :, :] - b[:, 1, :, :], 2))))
+    '''
+    smthL1_criterion = nn.SmoothL1Loss()
+    nll_criterion = nn.NLLLoss2d()
 
     curepoch = 0
-
-    for epoch in range(starting_epoch, starting_epoch + int(config('train', 'NUM_EPOCH'))):
+    for epoch in range(starting_epoch, starting_epoch + epochnum):
         curepoch += 1
 
-        class_weights.cuda()
-
-        cls_criterion = nn.BCEWithLogitsLoss()
-
-        ''' Losses tested for offsetmap
-        seg_criterion = nn.NLLLoss2d()
-        mse_loss = nn.MSELoss()
-        l1_loss = nn.L1Loss()
-        d2_loss = (lambda a, b:
-                   torch.sum(
-                       torch.sqrt(
-                           torch.pow(a[:, 0, :, :] - b[:, 0, :, :], 2)
-                           + torch.pow(a[:, 1, :, :] - b[:, 1, :, :], 2))))
-        '''
-        smthL1_criterion = nn.SmoothL1Loss()
-        nll_criterion = nn.NLLLoss2d()
-
-        batch_size = int(config('train', 'BATCH_SIZE'))
         epoch_losses = []
         epoch_ins_losses = []
         epoch_cls_losses = []
@@ -113,10 +108,14 @@ def train():
         net.train()
         for x, y, y_cls, y_seg in train_iterator:
             steps += batch_size
+            x = Variable(x.cuda())
+            y = Variable(y.cuda())
+            y_cls = Variable(y_cls.cuda())
+            y_seg = Variable(y_seg.cuda())
+
             optimizer.zero_grad()
 
-            x, y, y_cls, y_seg = Variable(x).cuda(), Variable(y).cuda(), Variable(y_cls).cuda(), Variable(y_seg).cuda()
-            if curepoch < int(config('train', 'SEG_EPOCH')):
+            if task == 'seg':
                 out_seg = net(x, func='seg')
                 loss = 100 * torch.abs(nll_criterion(out_seg, y_seg))
                 epoch_losses.append(loss.data[0])
@@ -127,7 +126,7 @@ def train():
                     np.mean(epoch_losses),
                     scheduler.get_lr()[0])
 
-            else:
+            elif task == 'offset':
                 out_cls, out = net(x, func='all')
                 cls_loss = torch.abs(cls_criterion(out_cls, y_cls))
                 ins_loss = torch.abs(smthL1_criterion(out, y))
@@ -151,9 +150,7 @@ def train():
             loss.backward()
             optimizer.step()
         scheduler.step()
-        torch.save(net.state_dict(), os.path.join(models_path, '_'.join(["net01", str(epoch + 1)])))
-        train_loss = np.mean(epoch_losses)
-
+        torch.save(net.state_dict(), os.path.join(models_path, '_'.join(["net03", task, str(epoch + 1)])))
 
 if __name__ == '__main__':
     train()

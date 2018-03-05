@@ -34,9 +34,6 @@ class Loader:
         '''
         self.target_transform = target_transform()
 
-        self.weight = torch.ones(21)
-        self.weight[0] = 0
-
     def __call__(self):
         workers = list(map(int, self._config('train', 'WORKERS').split(',')))
 
@@ -49,4 +46,4 @@ class Loader:
             batch_size=int(self._config('train','BATCH_SIZE')),
             shuffle=True)
 
-        return loader, self.weight, self.NUM_CLASSES
+        return loader
