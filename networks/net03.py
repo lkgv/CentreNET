@@ -2,8 +2,6 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 from torchvision import models
-from torch.autograd import variable
-from torch_deform_conv.layers import ConvOffset2D
 
 DEBUG = False
 
