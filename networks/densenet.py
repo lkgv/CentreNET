@@ -7,6 +7,7 @@ DEBUG = False
 
 class Features(nn.Module):
     def __init__(self, orig_module):
+        super(Features, self).__init__()
         self.orig = orig_module
     
     def forward(self, x):
@@ -40,6 +41,7 @@ class Features(nn.Module):
 
 class Classifier(nn.Module):
     def __init__(self, orig_module, num_classes = 22):
+        super(Classifier, self).__init__()
         self.orig = orig_module
         self.convert = nn.Linear(1000, num_classes, bias=True)
     
@@ -51,6 +53,8 @@ class Classifier(nn.Module):
 
 class Segmenter(nn.Module):
     def __init__(self, num_classes = 22):
+        super(Segmenter, self).__init__()
+
         self.conv0 = nn.Conv2d(1664, 1000, (1,1))
         self.bn0 = nn.BatchNorm2d(1000, eps=1e-05, momentum=0.1, affine=True)
         self.relu0 = nn.ReLU(inplace=True)
