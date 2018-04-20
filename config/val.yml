@@ -1,0 +1,16 @@
+data:
+  DATA_DIR: ~/data/VOC2012/VOCdevkit/VOC2012/Cutted
+  NUM_CLASSES: 22
+  NUM_CHANNELS: 3
+  NUM_WORKERS: 1
+  DATA_SET: VOC2012
+  SIZE: 5464
+
+network:
+  PRETRAINED: false
+  ARCHITECTURE: densenet161
+  
+val:
+  WEIGHT_DIR: weights
+  WORKER: !!str 0
+  MODEL: net03_offset_85

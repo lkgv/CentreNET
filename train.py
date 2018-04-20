@@ -12,11 +12,13 @@ import logging
 import numpy as np
 
 import VOCloader
-from networks.net03 import ConvNet
+import networks
 from utils import Configures
-from loss import SmoothL1Loss
 
+ConvNet = networks.densenet.ConvNet
 DEBUG = False
+
+
 def weights_init(m):
     classname=m.__class__.__name__
     xavier = nn.init.kaiming_uniform
@@ -24,6 +26,7 @@ def weights_init(m):
     if classname.find('Conv2d') != -1 or classname.find('Linear') != -1:
         xavier(m.weight.data)
         constant(m.bias.data, 0.1)
+
 
 def init_net01(config):
     epoch = 0
@@ -47,7 +50,7 @@ def init_net01(config):
     y_cls[i, T] = 1 if class T is present in image i, 0 otherwise
 '''
 def train():
-    config = Configures()
+    config = Configures(cfg='train.yml')
 
     seed = int(config('train', 'RANDOM_SEED'))
     base_lr = float(config('train', 'LR'))
@@ -65,7 +68,6 @@ def train():
 
     models_path = os.path.abspath(os.path.expanduser('models'))
     os.makedirs(models_path, exist_ok=True)
-
     net, starting_epoch = init_net01(config=config)
 
     voc_loader = VOCloader.Loader(configure=config)
@@ -90,6 +92,9 @@ def train():
     nll_criterion = nn.NLLLoss2d()
 
     curepoch = 0
+    level1 = config('train', 'level1')
+    level2 = config('train', 'level2')
+    level3 = config('train', 'level3')
     for epoch in range(starting_epoch, starting_epoch + epochnum):
         curepoch += 1
 
@@ -110,9 +115,23 @@ def train():
 
             optimizer.zero_grad()
 
-            if task == 'seg':
-                out_seg = net(x, func='seg')
-                loss = torch.abs(nll_criterion(out_seg, y_seg))
+            if curepoch <= level1:
+                out_cls = net(x, function='classification')
+                loss = cls_criterion(out_cls, y_cls)
+                epoch_losses.append(loss.data[0])
+
+                if curepoch == level1:
+                    net.transfer_weight()
+
+                status = '[{0}] Classification; loss:{1:0.6f}/{2:0.6f}, LR:{3:0.8f}'.format(
+                    epoch + 1,
+                    loss.data[0],
+                    np.mean(epoch_losses),
+                    scheduler.get_lr()[0])
+            
+            elif curepoch <= level2:
+                out_segment = net(x, function='segmentation')
+                loss = seg_criterion(out_segment, y_seg)
                 epoch_losses.append(loss.data[0])
 
                 status = '[{0}] Segmentation; loss:{1:0.6f}/{2:0.6f}, LR:{3:0.8f}'.format(
@@ -120,32 +139,23 @@ def train():
                     loss.data[0],
                     np.mean(epoch_losses),
                     scheduler.get_lr()[0])
-
-            elif task == 'offset':
-                out_cls, out = net(x, func='all')
-                cls_loss = torch.abs(cls_criterion(out_cls, y_cls))
-                ins_loss = torch.abs(smthL1_criterion(out, y))
-                loss = ins_loss + alpha * cls_loss
-
+            
+            elif curepoch <= level3:
+                out_cls, out_segment = net(x, function='classification + segmentation')
+                loss = alpha * cls_criterion(out_cls, y_cls) + seg_criterion(out_segment, y_seg)
                 epoch_losses.append(loss.data[0])
-                epoch_cls_losses.append(cls_loss.data[0])
-                epoch_ins_losses.append(ins_loss.data[0])
 
-                status = '[{0}] loss:{1:0.4f}/{2:0.4f},cls:{3:0.4f}/{4:0.4f},ins:{5:0.4f}/{6:0.4f} LR:{7:0.6f}'.format(
+                status = '[{0}] Double; loss:{1:0.6f}/{2:0.6f}, LR:{3:0.8f}'.format(
                     epoch + 1,
                     loss.data[0],
                     np.mean(epoch_losses),
-                    cls_loss.data[0],
-                    np.mean(epoch_cls_losses),
-                    ins_loss.data[0],
-                    np.mean(epoch_ins_losses),
                     scheduler.get_lr()[0])
 
             train_iterator.set_description(status)
             loss.backward()
             optimizer.step()
         scheduler.step()
-        torch.save(net.state_dict(), os.path.join(models_path, '_'.join(["net03", task, str(epoch + 1)])))
+        torch.save(net.state_dict(), os.path.join(models_path, '_'.join(["dense", task, str(epoch + 1)])))
 
 if __name__ == '__main__':
     train()

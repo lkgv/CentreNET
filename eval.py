@@ -14,59 +14,41 @@ import logging
 import numpy as np
 
 import VOCloader
-from networks.net01 import ConvNet
-from utils import Configures
+from networks.base import ConvNet
+from utils import Configures, checkdir
 
-model_name = 'net01_12'
+configFile = 'val.yml'
 
-model_path = os.path.abspath(os.path.expanduser('models'))
-model_dir = os.path.join(model_path, model_name)
 
-configFile = os.path.abspath(os.path.expanduser('val.ini'))
-
-def init_net01(config, snapshot = None):
-    epoch = 0
-    net = ConvNet(config)
+def init_net(net, config):
     net = nn.DataParallel(net)
+    model_name = config('val', 'MODEL')
+    _, _, epoch = model_name.split('_')
+
+    model_path = os.path.join('models', model_name)
+    net.load_state_dict(torch.load(model_path))
     net = net.cuda()
+    
     return net, epoch
 
-def checkdir(path):
-    if os.path.isfile(path):
-        print('current path {} is a file instead of dir'.format(path))
-        raise TypeError('There have been a file in appointed path!')
-    elif os.path.isdir(path):
-        pass
-    else:
-        os.mkdir(path)
 
 def main():
+    expdir = os.path.abspath(os.path.expanduser('exp'))
+    checkdir(expdir)
+
     config = Configures(configFile)
+    os.environ["CUDA_VISIBLE_DEVICES"] = config('val', 'WORKER')
+    max_steps = config('data', 'SIZE')
 
-    os.environ["CUDA_VISIBLE_DEVICES"] = config('train', 'WORKERS')
-    # net, starting_epoch = build_network(snapshot, backend)
-    # data_path = os.path.abspath(os.path.expanduser(data_path))
-    seed = int(config('train', 'RANDOM_SEED'))
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed_all(seed)
+    net = ConvNet(config, task='val')
+    net, starting_epoch = init_net(net, config)
 
-    batch_size = int(config('train', 'BATCH_SIZE'))
-
-    models_path = os.path.abspath(os.path.expanduser('models'))
-    os.makedirs(models_path, exist_ok=True)
-
-    net, starting_epoch = init_net01(config=config)
-
-    voc_loader = VOCloader.Loader(configure=config)
-
-    # train_loader, class_weights, n_images = voc_loader(data_path, batch_size, len(eval(gpu)))
-    train_loader, class_weights, n_images = voc_loader()
-
-    max_steps = 5428
-
-    train_iterator = tqdm(train_loader, total=max_steps // batch_size + 1)
+    voc_loader = VOCloader.Loader(configure=config, task='val')
+    train_loader = voc_loader()
+    train_iterator = tqdm(train_loader, total=max_steps)
 
     count = 0
+    net.eval()
 
     for x, y, y_cls in train_iterator:
 
@@ -74,23 +56,21 @@ def main():
 
         out_cls, out = net(x, func='all')
 
-        for i in range(batch_size):
-            count += 1
-            expdir = os.path.abspath(os.path.expanduser('exp'))
-            outdir = os.path.join(expdir, str(count).zfill(6))
-            checkdir(expdir)
-            checkdir(outdir)
+        count += 1
+        
+        outdir = os.path.join(expdir, str(count).zfill(6))
+        checkdir(outdir)
+        name_x = os.path.join(outdir, 'X.npy')
+        name_y = os.path.join(outdir, 'y.npy')
+        name_out = os.path.join(outdir, 'out.npy')
 
-            name_x = os.path.join(outdir, 'X.npy')
-            name_y = os.path.join(outdir, 'y.npy')
-            name_out = os.path.join(outdir, 'out.npy')
+        xs = x.data[0].cpu().transpose(0,2).transpose(0,1).numpy()
+        np.save(name_x, xs)
+        ys =  y.data[0].cpu().numpy()
+        np.save(name_y, ys)
+        outs =  out.data[0].cpu().numpy()
+        np.save(name_out, outs)
 
-            xs = x.data[i].cpu().transpose(0,2).transpose(0,1).numpy()
-            np.save(name_x, xs)
-            ys =  y.data[i].cpu().numpy()
-            np.save(name_y, ys)
-            outs =  out.data[i].cpu().numpy()
-            np.save(name_out, outs)
 
 if __name__ == '__main__':
     main()

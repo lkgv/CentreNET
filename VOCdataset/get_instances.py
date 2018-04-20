@@ -31,17 +31,7 @@ class Instance(Dataset):
     def __getitem__(self, index):
         fileid = self.imglist[index]
 
-        '''
-        imgfile = os.path.join(self.images_root,
-                               '{}.jpg'.format(fileid))
-        with open(imgfile, 'rb') as f:
-            image = Image.open(f).convert('RGB')
-        segmentfile = os.path.join(self.segments_root,
-                                   '{}.png'.format(fileid))
-        with open(segmentfile, 'rb') as f:
-            segmentation = Image.open(f).convert('P')
-        '''
-
+        # Get pictures and their annotaions
         imgfile = os.path.join(self.images_root,
                                '{}.jpg'.format(fileid))
         with open(imgfile, 'rb') as f:
@@ -58,17 +48,12 @@ class Instance(Dataset):
             tmp = xmltodict.parse(f.read())
             annotation = tmp['annotation']
 
+        # transform input and target data
         if self.input_transform is not None:
             image = self.input_transform(image)
-
         if self.target_transform is not None:
             offset, annotation = self.target_transform(
                 offset, annotation)
-        '''
-        if self.target_transform is not None:
-            annotation, segmentation = self.target_transform(
-                annotation, segmentation)
-        '''
 
         annotation = torch.Tensor(annotation)
         offset = torch.Tensor(offset).transpose(0, 2).transpose(1, 2)
