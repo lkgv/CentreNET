@@ -59,7 +59,6 @@ class Vgg16FeatureNet(nn.Module):
 
     def forward(self, x):
         middle0 = x.contiguous()
-        tagged = ['5', '12', '22', '42']
 
         for name, layer in self.named_children():
             x = layer(x)

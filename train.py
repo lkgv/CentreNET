@@ -12,7 +12,7 @@ import logging
 import numpy as np
 
 import VOCloader
-import networks
+import networks.densenet
 from utils import Configures
 
 ConvNet = networks.densenet.ConvNet
@@ -58,7 +58,10 @@ def train():
     alpha = float(config('train', 'ALPHA'))
     task = config('train', 'TASK') # 'seg'/'offset'
     batch_size = int(config('train', 'BATCH_SIZE'))
-    epochnum = int(config('train', 'NUM_EPOCH'))
+    level1 = config('train', 'level1')
+    level2 = config('train', 'level2')
+    level3 = config('train', 'level3')
+    epochnum = level1 + level2 + level3
     milestone = int(config('train', 'MILESTONE'))
     gamma = float(config('train', 'GAMMA'))
 
@@ -79,7 +82,6 @@ def train():
                             gamma=gamma)
     cls_criterion = nn.BCEWithLogitsLoss()
     ''' Losses tested for offsetmap
-    seg_criterion = nn.NLLLoss2d()
     mse_loss = nn.MSELoss()
     l1_loss = nn.L1Loss()
     d2_loss = (lambda a, b:
@@ -89,12 +91,11 @@ def train():
                         + torch.pow(a[:, 1, :, :] - b[:, 1, :, :], 2))))
     '''
     smthL1_criterion = nn.SmoothL1Loss()
+    seg_criterion = nn.NLLLoss2d()
     nll_criterion = nn.NLLLoss2d()
 
     curepoch = 0
-    level1 = config('train', 'level1')
-    level2 = config('train', 'level2')
-    level3 = config('train', 'level3')
+    
     for epoch in range(starting_epoch, starting_epoch + epochnum):
         curepoch += 1
 

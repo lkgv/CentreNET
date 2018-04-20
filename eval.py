@@ -14,7 +14,7 @@ import logging
 import numpy as np
 
 import VOCloader
-from networks.base import ConvNet
+from networks.densenet import ConvNet
 from utils import Configures, checkdir
 
 configFile = 'val.yml'
