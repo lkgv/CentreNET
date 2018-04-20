@@ -1,0 +1,27 @@
+data:
+  DATA_DIR: ~/data/VOC2012/VOCdevkit/VOC2012/Pointer
+  NUM_CLASSES: 22
+  NUM_CHANNELS: 3
+  DATA_SET: VOC2012
+  SIZE: 5464
+
+network:
+  PRETRAINED: true
+  ARCHITECTURE: densenet169
+
+train:
+  level1: 30
+  level2: 40
+  level3: 30
+  PRETRAINED: true
+  ALPHA: 10
+  RANDOM_SEED: 19260817
+  LR: 0.0001
+  BATCH_SIZE: 64
+  SAVE_PERIOD: 1
+  WEIGHT_DIR: weights
+  WORKERS: 0,1,2,3
+  TASK: offset
+  # SNAPSHOT: net03_seg_12
+  MILESTONE: 10000
+  GAMMA: 0.83
