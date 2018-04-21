@@ -46,7 +46,7 @@ class Classifier(nn.Module):
         self.convert = nn.Linear(1000, num_classes, bias=True)
     
     def forward(self, x):
-        x = F.relu(self.orig(x))
+        x = F.relu(self.orig(x.view(-1, 1664)))
         x = self.convert(x)
         return x
 
@@ -60,18 +60,18 @@ class Segmenter(nn.Module):
         self.relu0 = nn.ReLU(inplace=True)
 
         self.deconv3 = nn.ConvTranspose2d(1000, 640, 4, stride=2, padding=1, bias=False)
-        self.deconv2 = nn.ConvTranspose2d(1820, 512, 4, stride=2, padding=1, bias=False)
+        self.deconv2 = nn.ConvTranspose2d(1920, 512, 4, stride=2, padding=1, bias=False)
         self.deconv1 = nn.ConvTranspose2d(1024, 512, 4, stride=2, padding=1, bias=False)
         
         self.deconv0_1 = nn.ConvTranspose2d(64, 64, 4, stride=2, padding=1, bias=False)
         self.deconv0 = nn.ConvTranspose2d(768, 136, 8, stride=4, padding=2, bias=False)
 
-        self.conv1 = self.conv(200, num_classes, (1, 1))
+        self.conv1 = nn.Conv2d(200, num_classes, (1, 1))
 
     def forward(self, x, feature0, feature1, feature2, feature3):
         x = self.conv0(x)
         x = self.bn0(x)
-        x = self.relu(0)
+        x = self.relu0(x)
         x = F.relu(self.deconv3(x))
         x = torch.cat((x, feature3), 1).contiguous()
         x = F.relu(self.deconv2(x))

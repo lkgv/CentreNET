@@ -10,7 +10,7 @@ network:
   ARCHITECTURE: densenet169
 
 train:
-  level1: 30
+  level1: 20
   level2: 40
   level3: 30
   PRETRAINED: true
@@ -23,5 +23,6 @@ train:
   WORKERS: 0,1,2,3
   TASK: offset
   # SNAPSHOT: net03_seg_12
+  SNAPSHOT: None
   MILESTONE: 10000
   GAMMA: 0.83

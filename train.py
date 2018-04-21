@@ -23,7 +23,8 @@ def weights_init(m):
     classname=m.__class__.__name__
     xavier = nn.init.kaiming_uniform
     constant = nn.init.constant
-    if classname.find('Conv2d') != -1 or classname.find('Linear') != -1:
+    # if classname.find('Conv2d') != -1 or 
+    if classname.find('Linear') != -1:
         xavier(m.weight.data)
         constant(m.bias.data, 0.1)
 
@@ -77,6 +78,7 @@ def train():
     train_loader = voc_loader()
 
     optimizer = optim.Adam(net.parameters(), lr=base_lr)
+    seg_optimizer = optim.Adam(net.module.segmenter.parameters(), lr=base_lr)
     scheduler = MultiStepLR(optimizer,
                             milestones=[x * milestone for x in range(1, 1000)],
                             gamma=gamma)
@@ -95,6 +97,7 @@ def train():
     nll_criterion = nn.NLLLoss2d()
 
     curepoch = 0
+    global_loss = []
     
     for epoch in range(starting_epoch, starting_epoch + epochnum):
         curepoch += 1
@@ -114,25 +117,29 @@ def train():
             y_cls = Variable(y_cls.cuda())
             y_seg = Variable(y_seg.cuda())
 
-            optimizer.zero_grad()
+            # optimizer.zero_grad()
 
             if curepoch <= level1:
+                optimizer.zero_grad()
                 out_cls = net(x, function='classification')
-                loss = cls_criterion(out_cls, y_cls)
+                loss = torch.abs(cls_criterion(out_cls, y_cls))
                 epoch_losses.append(loss.data[0])
 
                 if curepoch == level1:
-                    net.transfer_weight()
+                    net.module.transfer_weight()
 
                 status = '[{0}] Classification; loss:{1:0.6f}/{2:0.6f}, LR:{3:0.8f}'.format(
                     epoch + 1,
                     loss.data[0],
                     np.mean(epoch_losses),
                     scheduler.get_lr()[0])
+                loss.backward()
+                optimizer.step()
             
-            elif curepoch <= level2:
+            elif curepoch <= level1 + level2:
+                seg_optimizer.zero_grad()
                 out_segment = net(x, function='segmentation')
-                loss = seg_criterion(out_segment, y_seg)
+                loss = torch.abs(seg_criterion(out_segment, y_seg))
                 epoch_losses.append(loss.data[0])
 
                 status = '[{0}] Segmentation; loss:{1:0.6f}/{2:0.6f}, LR:{3:0.8f}'.format(
@@ -140,10 +147,13 @@ def train():
                     loss.data[0],
                     np.mean(epoch_losses),
                     scheduler.get_lr()[0])
-            
-            elif curepoch <= level3:
+                loss.backward()
+                seg_optimizer.step()            
+
+            elif curepoch <= level1 + level2 + level3:
+                optimizer.zero_grad()
                 out_cls, out_segment = net(x, function='classification + segmentation')
-                loss = alpha * cls_criterion(out_cls, y_cls) + seg_criterion(out_segment, y_seg)
+                loss = alpha * torch.abs(cls_criterion(out_cls, y_cls)) + torch.abs(seg_criterion(out_segment, y_seg))
                 epoch_losses.append(loss.data[0])
 
                 status = '[{0}] Double; loss:{1:0.6f}/{2:0.6f}, LR:{3:0.8f}'.format(
@@ -151,12 +161,20 @@ def train():
                     loss.data[0],
                     np.mean(epoch_losses),
                     scheduler.get_lr()[0])
+                loss.backward()
+                optimizer.step()
 
             train_iterator.set_description(status)
-            loss.backward()
-            optimizer.step()
-        scheduler.step()
+            # loss.backward()
+            # optimizer.step()
+        if curepoch <= level1 or curepoch > level1 + level2:
+            scheduler.step()
         torch.save(net.state_dict(), os.path.join(models_path, '_'.join(["dense", task, str(epoch + 1)])))
+        
+        global_loss.append((curepoch, loss.data[0]))
+
+    with open('train.log', 'w') as f:
+        f.write(str(global_loss))
 
 if __name__ == '__main__':
     train()
