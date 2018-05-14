@@ -50,26 +50,27 @@ def main():
     count = 0
     net.eval()
 
-    for x, y, y_cls in train_iterator:
+    for x, y, y_cls, y_seg in train_iterator:
 
         x, y, y_cls = Variable(x).cuda(), Variable(y).cuda(), Variable(y_cls).cuda()
 
-        out_cls, out = net(x, func='all')
+        # out_cls, out = net(x, func='all')
+        out_cls, out_seg = net(x, function='classification + segmentation')
 
-        count += 1
+        count += 1 
         
         outdir = os.path.join(expdir, str(count).zfill(6))
         checkdir(outdir)
         name_x = os.path.join(outdir, 'X.npy')
-        name_y = os.path.join(outdir, 'y.npy')
-        name_out = os.path.join(outdir, 'out.npy')
+        name_cls = os.path.join(outdir, 'cls.npy')
+        name_seg = os.path.join(outdir, 'seg.npy')
 
         xs = x.data[0].cpu().transpose(0,2).transpose(0,1).numpy()
         np.save(name_x, xs)
-        ys =  y.data[0].cpu().numpy()
-        np.save(name_y, ys)
-        outs =  out.data[0].cpu().numpy()
-        np.save(name_out, outs)
+        ys =  out_cls.data[0].cpu().numpy()
+        np.save(name_cls, ys)
+        outs =  out_seg.data[0].cpu().numpy()
+        np.save(name_seg, outs)
 
 
 if __name__ == '__main__':

@@ -8,9 +8,9 @@ data:
 
 network:
   PRETRAINED: false
-  ARCHITECTURE: densenet161
+  ARCHITECTURE: densenet169
   
 val:
   WEIGHT_DIR: weights
   WORKER: !!str 0
-  MODEL: net03_offset_85
+  MODEL: dense_offset_90
